@@ -1,5 +1,6 @@
 .project
 .pydevproject
+.settings/
 test-*
 db.sqlite*
 # Byte-compiled / optimized / DLL files
