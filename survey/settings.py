@@ -1,3 +1,5 @@
+# coding=utf-8
+
 """
 Django settings for survey project.
 
@@ -37,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'survey.apps.AppConfig'
 ]
 
 MIDDLEWARE = [

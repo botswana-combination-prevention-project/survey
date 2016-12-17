@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from datetime import date
 
 from django.apps import apps as django_apps
