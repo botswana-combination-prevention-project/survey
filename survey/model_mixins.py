@@ -5,7 +5,7 @@ class SurveyModelMixin(models.Model):
 
     survey = models.CharField(max_length=25)
 
-    survey_group = models.CharField(max_length=25, null=True)
+    survey_schedule = models.CharField(max_length=50)
 
     def save(self, *args, **kwargs):
         """Restricts the concrete model from editing data outside of the start
@@ -23,6 +23,10 @@ class SurveyModelMixin(models.Model):
 #                                 self.community,
 #                                 mapper_instance.current_survey_dates.full_enrollment_date.strftime('%Y-%m-%d')))
         super().save(*args, **kwargs)
+
+    @property
+    def survey_label(self):
+        return '{}.{}'.format(self.survey_schedule, self.survey)
 
     class Meta:
         abstract = True

@@ -15,7 +15,7 @@ style = color_style()
 class AppConfig(DjangoApponfig):
     name = 'survey'
     active_survey_schedule_groups = ['test_survey']
-    current_survey_label = 'annual.test_community'
+    current_survey_label = 'year-1.annual.test_community'  # survey_schedule.name + '.' + survey.label
 
     def ready(self):
         sys.stdout.write('Loading {} ...\n'.format(self.verbose_name))

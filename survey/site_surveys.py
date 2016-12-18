@@ -69,11 +69,12 @@ class SiteSurveys:
         return schedules
 
     def get_survey(self, survey_label):
-        name, map_area = survey_label.split('.')
+        survey_schedule_name, survey_name, map_area = survey_label.split('.')
         for survey_schedule in self.get_survey_schedules():
-            for survey in survey_schedule.surveys:
-                if survey.name == name and survey.map_area == map_area:
-                    return survey
+            if survey_schedule.name == survey_schedule_name:
+                for survey in survey_schedule.surveys:
+                    if survey.name == survey_name and survey.map_area == map_area:
+                        return survey
         return None
 
     def get_survey_names(self, *group_names):
@@ -96,7 +97,6 @@ class SiteSurveys:
         module_name = module_name or 'surveys'
         sys.stdout.write(' * checking for site {} ...\n'.format(module_name))
         for app in django_apps.app_configs:
-            print(app)
             try:
                 mod = import_module(app)
                 try:

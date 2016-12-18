@@ -241,7 +241,7 @@ class TestSurvey(SurveyMixin, TestCase):
         site_surveys.register(survey_one)
         site_surveys.register(survey_two)
         site_surveys.register(survey_three)
-        survey = site_surveys.get_survey('annual.test_community')
+        survey = site_surveys.get_survey('year-1.annual.test_community')
         try:
             self.assertEqual(survey.label, 'annual.test_community')
         except AttributeError:
