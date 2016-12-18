@@ -6,8 +6,8 @@ from survey.exceptions import SurveyScheduleError, AddSurveyDateError, AddSurvey
 
 class SurveySchedule:
 
-    def __init__(self, name=None, start_date=None, end_date=None, group_name=None, map_areas=None):
-        self.registry = {None: {}}
+    def __init__(self, name=None, group_name=None, start_date=None, end_date=None, map_areas=None):
+        self.registry = []
         self.group_name = group_name  # e.g. ESS
         self.survey_groups = []
         self.map_areas = map_areas  # if none, except any map_area
@@ -20,10 +20,18 @@ class SurveySchedule:
             raise SurveyScheduleError('Invalid Survey schedule. Start date may not equal end date')
 
     def __repr__(self):
-        return 'SurveySchedule(\'{0.name}\', {0.start_date}, {0.end_date})'.format(self)
+        return 'SurveySchedule(\'{0.label}\', {0.start_date}, {0.end_date})'.format(self)
 
     def __str__(self):
-        return self.name
+        return self.label
+
+    @property
+    def label(self):
+        return '{}.{}'.format(self.group_name, self.name)
+
+    @property
+    def surveys(self):
+        return self.registry
 
     def add_survey(self, *surveys):
         for survey in surveys:
@@ -48,44 +56,22 @@ class SurveySchedule:
                     raise AddSurveyMapAreaError(
                         'Unable to add survey to schedule. Invalid map_area for scheudle {}. Got {}.'.format(
                             self.name, survey.map_area))
-            objs = self.get_surveys_by_map_area(map_area=survey.map_area, survey_group=survey.group)
-            if self.get_surveys_by_date(reference_date=survey.start_date, surveys=objs):
+            if self.get_surveys(map_area=survey.map_area, reference_date=survey.start_date):
                 raise AddSurveyOverlapError()
-            if survey.group not in self.survey_groups:
-                self.survey_groups.append(survey.group)
-            surveys = self.registry.get(survey.group, {})
-            surveys.update({survey.name: survey})
-            self.registry.update({survey.group: surveys})
+            survey.survey_schedule = self.label
+            self.registry.append(survey)
 
-    def get_surveys(self, map_area=None, reference_date=None, survey_group=None):
+    def get_surveys(self, map_area=None, reference_date=None):
+        """Returns a list of surveys that meet the criteria."""
+        def in_date_range(survey, reference_date):
+            if survey.start_date <= reference_date <= survey.end_date:
+                return True
+            return False
         surveys = []
-        if map_area:
-            surveys = self.get_surveys_by_map_area(map_area, survey_group)
-        if reference_date:
-            surveys = self.get_surveys_by_date(reference_date, survey_group=survey_group, surveys=surveys)
-        if not surveys:
-            raise SurveyScheduleError(
-                'Unable to retrieve survey. Using map_area={}, survey_group={}, reference_date={}'.format(
-                    map_area, survey_group, reference_date))
+        if reference_date and map_area:
+            surveys = [s for s in self.registry if s.map_area == map_area and in_date_range(s, reference_date)]
+        elif map_area:
+            surveys = [s for s in self.registry if s.map_area == map_area]
+        elif reference_date:
+            surveys = [s for s in self.registry if in_date_range(s, reference_date)]
         return surveys
-
-    def get_surveys_by_date(self, reference_date, surveys=None, survey_group=None):
-        objs = []
-        if reference_date:
-            if not surveys:
-                surveys = [s for s in self.registry[survey_group].values()]
-            for survey in surveys:
-                if survey.start_date <= reference_date <= survey.end_date:
-                    objs.append(survey)
-        return objs
-
-    def get_surveys_by_map_area(self, map_area, survey_group=None):
-        objs = []
-        try:
-            surveys = [s for s in self.registry[survey_group].values()]
-        except KeyError:
-            surveys = []
-        for survey in surveys:
-            if survey.map_area == map_area:
-                objs.append(survey)
-        return objs

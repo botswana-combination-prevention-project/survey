@@ -12,12 +12,13 @@ from .survey import Survey
 from .survey_schedule import SurveySchedule
 from .test_mixins import SurveyMixin
 from survey.exceptions import AddSurveyMapAreaError, AddSurveyDateError, AddSurveyOverlapError
+from survey.surveys import survey_one, survey_two, survey_three
 
 
 class TestSurvey(SurveyMixin, TestCase):
 
     def setUp(self):
-        site_surveys._registry = {}
+        site_surveys.clear_registry()
 
     def test_schedule_good_dates(self):
         try:
@@ -80,7 +81,7 @@ class TestSurvey(SurveyMixin, TestCase):
             site_surveys.register(survey_schedule)
         schedules.sort(key=lambda o: o.start_date)
         self.assertEqual(len(schedules), 3)
-        self.assertEqual(site_surveys.get_survey_schedules('ESS'), {'ESS': schedules})
+        self.assertEqual(site_surveys.get_survey_schedules('ESS'), schedules)
 
     def test_create_survey(self):
         try:
@@ -154,17 +155,6 @@ class TestSurvey(SurveyMixin, TestCase):
             full_enrollment_date=start_date + relativedelta(weeks=1)
         )
         self.assertRaises(AddSurveyDateError, survey_schedule.add_survey, survey)
-
-    def test_add_survey_with_group(self):
-        survey_schedule = self.make_survey_schedule()
-        survey = Survey(
-            map_area='test_community',
-            group='ESS',
-            start_date=survey_schedule.start_date + relativedelta(days=1),
-            end_date=survey_schedule.end_date - relativedelta(days=1),
-            full_enrollment_date=survey_schedule.end_date - relativedelta(days=2))
-        survey_schedule.add_survey(survey)
-        self.assertEqual(survey_schedule.survey_groups, ['ESS'])
 
     def test_create_survey_with_map_areas(self):
         survey_schedule = self.make_survey_schedule(map_areas=['test_community'])
@@ -246,3 +236,13 @@ class TestSurvey(SurveyMixin, TestCase):
             end_date=survey_schedule.start_date + relativedelta(days=100),
             full_enrollment_date=survey_schedule.start_date + relativedelta(days=80))
         self.assertRaises(AddSurveyOverlapError, survey_schedule.add_survey, survey1, survey2)
+
+    def test_get_current_survey(self):
+        site_surveys.register(survey_one)
+        site_surveys.register(survey_two)
+        site_surveys.register(survey_three)
+        survey = site_surveys.get_survey('annual.test_community')
+        try:
+            self.assertEqual(survey.label, 'annual.test_community')
+        except AttributeError:
+            self.fail('annual.test_community unexpectedly does not exist. Got {}'.format(survey))

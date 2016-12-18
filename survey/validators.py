@@ -1,11 +1,14 @@
 # coding=utf-8
 
 from django.core.exceptions import ValidationError
-
-from .models import Survey
+from survey.site_surveys import site_surveys
 
 
 def date_in_survey(value):
+    for survey_schedule_collection in site_surveys.get_survey_schedules():
+        for survey_schedules in survey_schedule_collection.value():
+            survey_schedules.get_surveys_by_date(value)
+                
     survey = Survey.objects.current_survey()
     if survey:
         if survey.datetime_start <= value <= survey.datetime_end:

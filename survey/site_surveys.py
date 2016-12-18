@@ -18,7 +18,7 @@ class SiteSurveys:
     A survey_schedule contains surveys"""
 
     def __init__(self):
-        self._registry = {}
+        self._registry = []
         self.loaded = False
 
     @property
@@ -28,56 +28,75 @@ class SiteSurveys:
                 'Registry not loaded. Is AppConfig for \'survey\' declared in settings?.')
         return self._registry
 
+    def clear_registry(self):
+        self._registry = []
+        self.loaded = False
+
     def register(self, survey_schedule):
         self.loaded = True
-        if survey_schedule.name in self.registry:
+        if survey_schedule.name in [survey_schedule.name for survey_schedule in self.registry]:
             raise AlreadyRegistered('Survey Schedule {} is already registered.'.format(survey_schedule))
-        for schedules in self.get_survey_schedules(group_name=survey_schedule.group_name).values():
-            for schedule in schedules:
-                if survey_schedule.start_date == schedule.start_date:
-                    raise AlreadyRegistered(
-                        'Survey Schedule {} is already registered using start date {}. '
-                        'Unable to registered {}.'.format(
-                            schedule.name, survey_schedule.start_date.strftime('%Y-%m-%d'), survey_schedule.name))
-        self.registry.update({survey_schedule.name: survey_schedule})
+        for schedule in self.get_survey_schedules(group_name=survey_schedule.group_name):
+            if survey_schedule.start_date == schedule.start_date:
+                raise AlreadyRegistered(
+                    'Survey Schedule {} is already registered using start date {}. '
+                    'Unable to registered {}.'.format(
+                        schedule.name, survey_schedule.start_date.strftime('%Y-%m-%d'), survey_schedule.name))
+        self.registry.append(survey_schedule)
 
     def get_survey_schedule(self, name):
-        name = name.split('.')[0]
+        group_name, name = name.split('.')[0]
         try:
-            survey_schedule = self.registry[name]
-        except KeyError:
+            survey_schedule = [s for s in self.registry if s.name == name and s.group_name == group_name][0]
+        except IndexError:
             raise SurveyScheduleError(
                 'Invalid survey schedule name. Got \'{}\'. Possible names are [{}].'.format(
-                    name, ', '.join(self.registry.keys())))
+                    name, ', '.join([s.name for s in self.registry])))
         return survey_schedule
 
     def get_survey_schedules(self, group_name=None):
-        """Returns a dictionary of {group_name: [<list of survey_schedules>]}.
+        """Returns a [<list of survey_schedules>].
 
         None is a valid group_name that returns all survey_schedules."""
-        ret = {}
         schedules = []
         if group_name:
-            for survey_schedule in self.registry.values():
+            for survey_schedule in self.registry:
                 if survey_schedule.group_name == group_name:
                     schedules.append(survey_schedule)
-            schedules.sort(key=lambda o: o.start_date)
-            ret = {group_name: schedules}
         else:
-            for survey_schedule in self.registry.values():
-                schedules.append(survey_schedule)
-            schedules.sort(key=lambda o: o.start_date)
-            ret = {group_name: schedules}
-        return ret
+            schedules = self.registry
+        schedules.sort(key=lambda o: o.start_date)
+        return schedules
 
-    def get_survey(self, survey_schedule_name):
-        return self.registry[survey_schedule_name].surveys
+    def get_survey(self, survey_label):
+        name, map_area = survey_label.split('.')
+        for survey_schedule in self.get_survey_schedules():
+            for survey in survey_schedule.surveys:
+                if survey.name == name and survey.map_area == map_area:
+                    return survey
+        return None
+
+    def get_survey_names(self, *group_names):
+        survey_names = []
+        for group_name in group_names:
+            for survey_schedule in self.get_survey_schedules(group_name=group_name):
+                for survey in survey_schedule.surveys:
+                    survey_names.append(survey.label)
+        return survey_names
+
+    def get_survey_schedule_group_names(self):
+        group_names = []
+        survey_schedule_collection = self.get_survey_schedules()
+        for survey_schedule in survey_schedule_collection.get(None):
+            group_names.append(survey_schedule.group_name)
+        return group_names
 
     def autodiscover(self, module_name=None):
         """Autodiscovers classes in the surveys.py file of any INSTALLED_APP."""
         module_name = module_name or 'surveys'
         sys.stdout.write(' * checking for site {} ...\n'.format(module_name))
         for app in django_apps.app_configs:
+            print(app)
             try:
                 mod = import_module(app)
                 try:

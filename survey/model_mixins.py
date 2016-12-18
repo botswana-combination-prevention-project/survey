@@ -5,6 +5,8 @@ class SurveyModelMixin(models.Model):
 
     survey = models.CharField(max_length=25)
 
+    survey_group = models.CharField(max_length=25, null=True)
+
     def save(self, *args, **kwargs):
         """Restricts the concrete model from editing data outside of the start
         and full_enrollment dates for the current survey."""
