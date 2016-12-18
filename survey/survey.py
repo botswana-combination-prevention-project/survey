@@ -33,4 +33,4 @@ class Survey:
 
     @property
     def label(self):
-        return '{}.{}'.format(self.name, self.map_area)
+        return '{}.{}.{}.{}'.format(self.survey_group, self.survey_schedule, self.name, self.map_area)

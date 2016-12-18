@@ -68,14 +68,15 @@ class SiteSurveys:
         schedules.sort(key=lambda o: o.start_date)
         return schedules
 
-    def get_survey(self, survey_label):
-        survey_schedule_name, survey_name, map_area = survey_label.split('.')
-        for survey_schedule in self.get_survey_schedules():
-            if survey_schedule.name == survey_schedule_name:
-                for survey in survey_schedule.surveys:
-                    if survey.name == survey_name and survey.map_area == map_area:
-                        return survey
-        return None
+    def get_surveys(self, *current_surveys):
+        surveys = []
+        for current_survey in current_surveys:
+            for survey_schedule in self.get_survey_schedules():
+                if survey_schedule.name == current_survey.survey_schedule:
+                    for survey in survey_schedule.surveys:
+                        if survey.name == current_survey.survey_name and survey.map_area == current_survey.map_area:
+                            surveys.append(survey)
+        return surveys
 
     def get_survey_names(self, *group_names):
         survey_names = []

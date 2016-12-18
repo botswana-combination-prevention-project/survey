@@ -222,27 +222,3 @@ class TestSurvey(SurveyMixin, TestCase):
         survey_schedule.add_survey(survey1, survey2)
         self.assertEqual([survey2], survey_schedule.get_surveys(
             reference_date=survey_schedule.start_date + relativedelta(days=80)))
-
-    def test_surveys_in_map_area_cannot_overlap(self):
-        survey_schedule = self.make_survey_schedule()
-        survey1 = Survey(
-            map_area='test_community',
-            start_date=survey_schedule.start_date + relativedelta(days=1),
-            end_date=survey_schedule.start_date + relativedelta(days=50),
-            full_enrollment_date=survey_schedule.start_date + relativedelta(days=30))
-        survey2 = Survey(
-            map_area='test_community',
-            start_date=survey_schedule.start_date + relativedelta(days=30),
-            end_date=survey_schedule.start_date + relativedelta(days=100),
-            full_enrollment_date=survey_schedule.start_date + relativedelta(days=80))
-        self.assertRaises(AddSurveyOverlapError, survey_schedule.add_survey, survey1, survey2)
-
-    def test_get_current_survey(self):
-        site_surveys.register(survey_one)
-        site_surveys.register(survey_two)
-        site_surveys.register(survey_three)
-        survey = site_surveys.get_survey('year-1.annual.test_community')
-        try:
-            self.assertEqual(survey.label, 'annual.test_community')
-        except AttributeError:
-            self.fail('annual.test_community unexpectedly does not exist. Got {}'.format(survey))

@@ -29,15 +29,31 @@ survey_three = SurveySchedule(
     start_date=(get_utcnow() - relativedelta(years=1)).date(),
     end_date=get_utcnow().date())
 
-survey = Survey(
-    name='annual',
+baseline = Survey(
+    name='baseline',
     map_area='test_community',
     start_date=(get_utcnow() - relativedelta(years=3)).date(),
     end_date=(get_utcnow() - relativedelta(years=2)).date(),
     full_enrollment_date=(get_utcnow() - relativedelta(years=2)).date()
 )
 
-survey_one.add_survey(survey)
+annual_1 = Survey(
+    name='annual-1',
+    map_area='test_community',
+    start_date=(get_utcnow() - relativedelta(years=3)).date(),
+    end_date=(get_utcnow() - relativedelta(years=2)).date(),
+    full_enrollment_date=(get_utcnow() - relativedelta(years=2)).date()
+)
+
+annual_2 = Survey(
+    name='annual-2',
+    map_area='test_community',
+    start_date=(get_utcnow() - relativedelta(years=3)).date(),
+    end_date=(get_utcnow() - relativedelta(years=2)).date(),
+    full_enrollment_date=(get_utcnow() - relativedelta(years=2)).date()
+)
+
+survey_one.add_survey(baseline, annual_1, annual_2)
 
 # SurveySchedule(name='bcpp-year-2')
 # SurveySchedule(name='bcpp-year-3')

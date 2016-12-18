@@ -56,8 +56,8 @@ class SurveySchedule:
                     raise AddSurveyMapAreaError(
                         'Unable to add survey to schedule. Invalid map_area for scheudle {}. Got {}.'.format(
                             self.name, survey.map_area))
-            if self.get_surveys(map_area=survey.map_area, reference_date=survey.start_date):
-                raise AddSurveyOverlapError()
+#             if self.get_surveys(map_area=survey.map_area, reference_date=survey.start_date):
+#                 raise AddSurveyOverlapError()
             survey.survey_schedule = self.label
             self.registry.append(survey)
 
