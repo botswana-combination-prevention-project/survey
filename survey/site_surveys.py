@@ -6,7 +6,7 @@ import sys
 from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
 
-from survey.exceptions import SurveyScheduleError, RegistryNotLoaded, AlreadyRegistered
+from survey.exceptions import SurveyScheduleError, RegistryNotLoaded, AlreadyRegistered, SurveyError
 
 
 class SiteSurveys:
@@ -60,6 +60,10 @@ class SiteSurveys:
                     before_import_registry = copy.copy(site_surveys._registry)
                     import_module('{}.{}'.format(app, module_name))
                     sys.stdout.write(' * registered surveys from application \'{}\'\n'.format(app))
+                except SurveyScheduleError:
+                    raise
+                except SurveyError:
+                    raise
                 except Exception as e:
                     if 'No module named \'{}.{}\''.format(app, module_name) not in str(e):
                         raise Exception(e)
