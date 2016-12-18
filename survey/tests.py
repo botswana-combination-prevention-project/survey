@@ -1,12 +1,17 @@
-from django.test import TestCase
+# coding=utf-8
 
-from .site_surveys import site_surveys
-from survey.survey_schedule import SurveySchedule
-from edc_base.utils import get_utcnow
 from dateutil.relativedelta import relativedelta
-from survey.exceptions import SurveyScheduleError, AlreadyRegistered, SurveyError
-from survey.survey import Survey
-from survey.test_mixins import SurveyMixin
+
+from django.test import TestCase, tag
+
+from edc_base.utils import get_utcnow
+
+from .exceptions import SurveyScheduleError, AlreadyRegistered, SurveyError
+from .site_surveys import site_surveys
+from .survey import Survey
+from .survey_schedule import SurveySchedule
+from .test_mixins import SurveyMixin
+from survey.exceptions import AddSurveyMapAreaError, AddSurveyDateError, AddSurveyOverlapError
 
 
 class TestSurvey(SurveyMixin, TestCase):
@@ -49,12 +54,14 @@ class TestSurvey(SurveyMixin, TestCase):
         self.assertRaises(AlreadyRegistered, site_surveys.register, survey_schedule)
 
     def test_create_survey(self):
-        survey = Survey(
-            map_area='test_community',
-            start_date=(get_utcnow() - relativedelta(years=1)).date(),
-            end_date=get_utcnow().date(),
-            full_enrollment_date=(get_utcnow() - relativedelta(weeks=1)).date()
-        )
+        try:
+            Survey(
+                map_area='test_community',
+                start_date=(get_utcnow() - relativedelta(years=1)).date(),
+                end_date=get_utcnow().date(),
+                full_enrollment_date=(get_utcnow() - relativedelta(weeks=1)).date())
+        except SurveyError:
+            self.fail('SurveyError unexpectedly raised')
 
     def test_create_survey_with_end_precedes_start_date(self):
         """Assert start date precedes end date."""
@@ -105,7 +112,7 @@ class TestSurvey(SurveyMixin, TestCase):
             end_date=end_date,
             full_enrollment_date=end_date - relativedelta(weeks=1)
         )
-        self.assertRaises(SurveyScheduleError, survey_schedule.add_survey, survey)
+        self.assertRaises(AddSurveyDateError, survey_schedule.add_survey, survey)
 
     def test_add_survey_with_bad_dates2(self):
         survey_schedule = self.make_survey_schedule()
@@ -117,4 +124,96 @@ class TestSurvey(SurveyMixin, TestCase):
             end_date=bad_end_date,
             full_enrollment_date=start_date + relativedelta(weeks=1)
         )
-        self.assertRaises(SurveyScheduleError, survey_schedule.add_survey, survey)
+        self.assertRaises(AddSurveyDateError, survey_schedule.add_survey, survey)
+
+    def test_add_survey_with_group(self):
+        survey_schedule = self.make_survey_schedule()
+        survey = Survey(
+            map_area='test_community',
+            group='ESS',
+            start_date=survey_schedule.start_date + relativedelta(days=1),
+            end_date=survey_schedule.end_date - relativedelta(days=1),
+            full_enrollment_date=survey_schedule.end_date - relativedelta(days=2))
+        survey_schedule.add_survey(survey)
+        self.assertEqual(survey_schedule.survey_groups, ['ESS'])
+
+    def test_create_survey_with_map_areas(self):
+        survey_schedule = self.make_survey_schedule(map_areas=['test_community'])
+        self.assertEqual(survey_schedule.map_areas, ['test_community'])
+
+    def test_survey_with_bad_map_area(self):
+        survey_schedule = self.make_survey_schedule(map_areas=['test_community'])
+        survey = Survey(
+            map_area='blahblah',
+            start_date=survey_schedule.start_date + relativedelta(days=1),
+            end_date=survey_schedule.end_date - relativedelta(days=1),
+            full_enrollment_date=survey_schedule.end_date - relativedelta(days=2))
+        self.assertRaises(AddSurveyMapAreaError, survey_schedule.add_survey, survey)
+
+    def test_survey_without_map_areas_accepts_any_map_area(self):
+        survey_schedule = self.make_survey_schedule(map_areas=None)
+        survey = Survey(
+            map_area='blahblah',
+            start_date=survey_schedule.start_date + relativedelta(days=1),
+            end_date=survey_schedule.end_date - relativedelta(days=1),
+            full_enrollment_date=survey_schedule.end_date - relativedelta(days=2))
+        try:
+            survey_schedule.add_survey(survey)
+        except AddSurveyMapAreaError:
+            self.fail('AddSurveyMapAreaError unexpectedly raised')
+
+    def test_get_survey_by_map_area(self):
+        survey_schedule = self.make_survey_schedule()
+        survey = Survey(
+            map_area='test_community',
+            start_date=survey_schedule.start_date + relativedelta(days=1),
+            end_date=survey_schedule.end_date - relativedelta(days=1),
+            full_enrollment_date=survey_schedule.end_date - relativedelta(days=2))
+        survey_schedule.add_survey(survey)
+        self.assertEqual([survey], survey_schedule.get_surveys(map_area='test_community'))
+
+    def test_get_survey_by_reference_date(self):
+        survey_schedule = self.make_survey_schedule()
+        survey1 = Survey(
+            map_area='test_community',
+            start_date=survey_schedule.start_date + relativedelta(days=1),
+            end_date=survey_schedule.start_date + relativedelta(days=50),
+            full_enrollment_date=survey_schedule.start_date + relativedelta(days=30))
+        survey2 = Survey(
+            map_area='test_community',
+            start_date=survey_schedule.start_date + relativedelta(days=51),
+            end_date=survey_schedule.start_date + relativedelta(days=100),
+            full_enrollment_date=survey_schedule.start_date + relativedelta(days=80))
+        survey_schedule.add_survey(survey1, survey2)
+        self.assertEqual([survey1], survey_schedule.get_surveys(
+            reference_date=survey_schedule.start_date + relativedelta(days=2)))
+
+    def test_get_survey_by_reference_date2(self):
+        survey_schedule = self.make_survey_schedule()
+        survey1 = Survey(
+            map_area='test_community',
+            start_date=survey_schedule.start_date + relativedelta(days=1),
+            end_date=survey_schedule.start_date + relativedelta(days=50),
+            full_enrollment_date=survey_schedule.start_date + relativedelta(days=30))
+        survey2 = Survey(
+            map_area='test_community',
+            start_date=survey_schedule.start_date + relativedelta(days=51),
+            end_date=survey_schedule.start_date + relativedelta(days=100),
+            full_enrollment_date=survey_schedule.start_date + relativedelta(days=80))
+        survey_schedule.add_survey(survey1, survey2)
+        self.assertEqual([survey2], survey_schedule.get_surveys(
+            reference_date=survey_schedule.start_date + relativedelta(days=80)))
+
+    def test_surveys_in_map_area_cannot_overlap(self):
+        survey_schedule = self.make_survey_schedule()
+        survey1 = Survey(
+            map_area='test_community',
+            start_date=survey_schedule.start_date + relativedelta(days=1),
+            end_date=survey_schedule.start_date + relativedelta(days=50),
+            full_enrollment_date=survey_schedule.start_date + relativedelta(days=30))
+        survey2 = Survey(
+            map_area='test_community',
+            start_date=survey_schedule.start_date + relativedelta(days=30),
+            end_date=survey_schedule.start_date + relativedelta(days=100),
+            full_enrollment_date=survey_schedule.start_date + relativedelta(days=80))
+        self.assertRaises(AddSurveyOverlapError, survey_schedule.add_survey, survey1, survey2)
