@@ -3,9 +3,7 @@ from django.db import models
 
 class SurveyModelMixin(models.Model):
 
-    survey = models.CharField(max_length=25)
-
-    survey_schedule = models.CharField(max_length=50)
+    survey = models.CharField(max_length=75)
 
     def save(self, *args, **kwargs):
         """Restricts the concrete model from editing data outside of the start
@@ -26,7 +24,7 @@ class SurveyModelMixin(models.Model):
 
     @property
     def survey_label(self):
-        return '{}.{}'.format(self.survey_schedule, self.survey)
+        return self.survey
 
     class Meta:
         abstract = True

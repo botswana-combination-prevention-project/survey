@@ -8,7 +8,6 @@ class Survey:
     def __init__(self, name=None, map_area=None, start_date=None, end_date=None,
                  full_enrollment_date=None):
         self.survey_schedule = None  # set when registered to a survey_schedule
-        self.survey_group = None  # set when registered to a survey_schedule
         self.name = name
         self.map_area = map_area
         self.start_date = start_date
@@ -33,4 +32,4 @@ class Survey:
 
     @property
     def label(self):
-        return '{}.{}.{}.{}'.format(self.survey_group, self.survey_schedule, self.name, self.map_area)
+        return '{}.{}.{}'.format(self.survey_schedule, self.name, self.map_area)

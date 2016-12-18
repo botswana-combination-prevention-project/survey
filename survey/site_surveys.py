@@ -78,6 +78,15 @@ class SiteSurveys:
                             surveys.append(survey)
         return surveys
 
+    @property
+    def surveys(self):
+        surveys = []
+        for survey_schedule in self.get_survey_schedules():
+            for survey in survey_schedule.surveys:
+                surveys.append(survey)
+        surveys.sort(key=lambda x: x.label)
+        return surveys
+
     def get_survey_names(self, *group_names):
         survey_names = []
         for group_name in group_names:

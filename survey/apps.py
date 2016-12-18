@@ -17,15 +17,27 @@ class CurrentSurvey:
         self.label = label
         self.group_name, self.survey_schedule, self.survey_name, self.map_area = label.split('.')
 
+    def __repr__(self):
+        return '{0}({1.label})'.format(self.__class__.__name__, self)
+
+    def __str__(self):
+        return self.label
+
 
 class CurrentSurveys:
     def __init__(self, *current_surveys):
+        self.current_surveys = current_surveys
         labels = []
+        map_areas = []
         for current_survey in current_surveys:
             labels.append(current_survey.label)
+            map_areas.append(current_survey.map_area)
         labels.sort()
-        self.label = labels
-        self.current_surveys = current_surveys
+        self.labels = labels
+        map_areas = list(set(map_areas))
+        if len(map_areas) > 1:
+            raise SurveyError('All current surveys must be in the same map_area. Got {}.'.format(map_areas))
+        self.map_area = map_areas[0]
 
     def __iter__(self):
         for current_survey in self.current_surveys:
@@ -53,9 +65,10 @@ class AppConfig(DjangoApponfig):
                         current_survey.group_name, site_surveys.get_survey_schedule_group_names()))
         if not site_surveys.get_surveys(*self.current_surveys):
             raise SurveyError(
-                'Invalid current surveys. Got \'{}\'. Expected one of {}. See survey.apps.AppConfig'.format(
-                    ', '.join([c.survey_name for c in self.current_surveys]),
-                    self.current_surveys, site_surveys.get_survey_names(*self.active_survey_schedule_groups)))
+                'Current surveys listed in AppConfig do not correspond with any surveys in surveys.py. '
+                'Got: \n *{}\n Expected one of: \n *{}\n See survey.apps.AppConfig and surveys.py'.format(
+                    ',\n *'.join(self.current_surveys.labels),
+                    ',\n *'.join([s.label for s in site_surveys.surveys])))
         sys.stdout.write(' * current surveys are:.\n')
         for current_survey in self.current_surveys:
             sys.stdout.write('   - {}.\n'.format(current_survey.label))
