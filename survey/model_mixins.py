@@ -1,11 +1,9 @@
 from django.db import models
 
-from .models import Survey
-
 
 class SurveyModelMixin(models.Model):
 
-    survey = models.ForeignKey(Survey, on_delete=models.PROTECT)
+    survey = models.CharField(max_length=25)
 
     def save(self, *args, **kwargs):
         """Restricts the concrete model from editing data outside of the start

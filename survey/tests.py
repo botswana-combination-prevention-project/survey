@@ -16,6 +16,9 @@ from survey.exceptions import AddSurveyMapAreaError, AddSurveyDateError, AddSurv
 
 class TestSurvey(SurveyMixin, TestCase):
 
+    def setUp(self):
+        site_surveys._registry = {}
+
     def test_schedule_good_dates(self):
         try:
             SurveySchedule(
@@ -45,13 +48,39 @@ class TestSurvey(SurveyMixin, TestCase):
         except SurveyScheduleError:
             pass
 
-    def test_schedule_name_is_unique(self):
+    def test_survey_schedule_name_is_unique(self):
+        for n in range(1, 4):
+            survey_schedule = SurveySchedule(
+                name='survey-10',
+                group_name='ESS',
+                start_date=(get_utcnow() - relativedelta(years=5 + n)).date(),
+                end_date=(get_utcnow() - relativedelta(years=4 + n)).date())
+            if n == 1:
+                site_surveys.register(survey_schedule)
+            else:
+                self.assertRaises(AlreadyRegistered, site_surveys.register, survey_schedule)
+
+    def test_survey_schedule_date_is_unique(self):
         survey_schedule = SurveySchedule(
-            name='survey-2',
+            name='survey-10',
             start_date=(get_utcnow() - relativedelta(years=5)).date(),
             end_date=(get_utcnow() - relativedelta(years=4)).date())
         site_surveys.register(survey_schedule)
         self.assertRaises(AlreadyRegistered, site_surveys.register, survey_schedule)
+
+    def test_get_survey_schedules_by_group_name(self):
+        schedules = []
+        for n in range(1, 4):
+            survey_schedule = SurveySchedule(
+                name='survey-1{}'.format(n),
+                group_name='ESS',
+                start_date=(get_utcnow() - relativedelta(years=5 + n)).date(),
+                end_date=(get_utcnow() - relativedelta(years=4 + n)).date())
+            schedules.append(survey_schedule)
+            site_surveys.register(survey_schedule)
+        schedules.sort(key=lambda o: o.start_date)
+        self.assertEqual(len(schedules), 3)
+        self.assertEqual(site_surveys.get_survey_schedules('ESS'), {'ESS': schedules})
 
     def test_create_survey(self):
         try:

@@ -6,8 +6,9 @@ from survey.exceptions import SurveyScheduleError, AddSurveyDateError, AddSurvey
 
 class SurveySchedule:
 
-    def __init__(self, name=None, start_date=None, end_date=None, map_areas=None):
+    def __init__(self, name=None, start_date=None, end_date=None, group_name=None, map_areas=None):
         self.registry = {None: {}}
+        self.group_name = group_name  # e.g. ESS
         self.survey_groups = []
         self.map_areas = map_areas  # if none, except any map_area
         self.name = name  # e.g. year-1, year-2, ...
@@ -18,6 +19,9 @@ class SurveySchedule:
         if self.start_date == self.end_date:
             raise SurveyScheduleError('Invalid Survey schedule. Start date may not equal end date')
 
+    def __repr__(self):
+        return 'SurveySchedule(\'{0.name}\', {0.start_date}, {0.end_date})'.format(self)
+
     def __str__(self):
         return self.name
 
@@ -25,20 +29,20 @@ class SurveySchedule:
         for survey in surveys:
             if not (self.start_date <= survey.start_date <= self.end_date):
                 raise AddSurveyDateError(
-                    'Unable to add survey to schedule. Survey {}.start_date is invalid. '
-                    'Got {}.'.format(survey.map_area, self.start_date))
+                    'Unable to add survey to schedule {}. Survey {}.start_date is invalid. '
+                    'Got {}.'.format(self.name, survey.name, self.start_date))
             if not (self.start_date <= survey.end_date <= self.end_date):
                 raise AddSurveyDateError(
-                    'Unable to add survey to schedule. Survey {}.end_date is invalid. '
-                    'Got {}.'.format(survey.map_area, self.start_date))
+                    'Unable to add survey to schedule {}. Survey {}.end_date is invalid. '
+                    'Got {}.'.format(self.name, survey.name, self.start_date))
             if survey.name in self.registry:
                 raise AddSurveyNameError(
-                    'Unable to add survey to schedule. A Survey with for map_area has already been '
-                    'added to schedule {}. Got {}.'.format(self.name, survey.map_area))
+                    'Unable to add survey to schedule {}. A Survey with for map_area has already been '
+                    'added. Got {}.'.format(self.name, survey.name))
             if survey.map_area in self.registry:
                 raise AddSurveyMapAreaError(
-                    'Unable to add survey to schedule. A Survey with for map_area has already been '
-                    'added to schedule {}. Got {}.'.format(self.name, survey.map_area))
+                    'Unable to add survey to schedule {}. A Survey with for map_area has already been '
+                    'added . Got {}.'.format(self.name, survey.name))
             if self.map_areas:
                 if survey.map_area not in self.map_areas:
                     raise AddSurveyMapAreaError(
