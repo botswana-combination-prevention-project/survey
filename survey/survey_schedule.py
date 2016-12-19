@@ -1,7 +1,6 @@
 # coding=utf-8
 
-from survey.exceptions import SurveyScheduleError, AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError,\
-    AddSurveyOverlapError
+from survey.exceptions import SurveyScheduleError, AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError
 
 
 class SurveySchedule:
