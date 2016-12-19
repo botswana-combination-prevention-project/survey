@@ -13,8 +13,9 @@ style = color_style()
 
 
 class CurrentSurvey:
-    def __init__(self, label):
+    def __init__(self, label, position):
         self.label = label
+        self.sequence = position
         self.group_name, self.survey_schedule, self.survey_name, self.map_area = label.split('.')
 
     def __repr__(self):
@@ -26,14 +27,11 @@ class CurrentSurvey:
 
 class CurrentSurveys:
     def __init__(self, *current_surveys):
+        current_surveys = list(current_surveys)
+        current_surveys.sort(key=lambda x: x.sequence)
         self.current_surveys = current_surveys
-        labels = []
-        map_areas = []
-        for current_survey in current_surveys:
-            labels.append(current_survey.label)
-            map_areas.append(current_survey.map_area)
-        labels.sort()
-        self.labels = labels
+        self.labels = [obj.label for obj in current_surveys]
+        map_areas = [obj.map_area for obj in current_surveys]
         map_areas = list(set(map_areas))
         if len(map_areas) > 1:
             raise SurveyError('All current surveys must be in the same map_area. Got {}.'.format(map_areas))
@@ -47,9 +45,9 @@ class CurrentSurveys:
 class AppConfig(DjangoApponfig):
     name = 'survey'
     current_surveys = CurrentSurveys(*[
-        CurrentSurvey('test_survey.year-1.baseline.test_community'),
-        CurrentSurvey('test_survey.year-1.annual-1.test_community'),
-        CurrentSurvey('test_survey.year-1.annual-2.test_community')])
+        CurrentSurvey('test_survey.year-1.baseline.test_community', 0),
+        CurrentSurvey('test_survey.year-1.annual-1.test_community', 1),
+        CurrentSurvey('test_survey.year-1.annual-2.test_community', 2)])
 
     def ready(self):
         sys.stdout.write('Loading {} ...\n'.format(self.verbose_name))

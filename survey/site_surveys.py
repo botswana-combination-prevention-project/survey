@@ -84,7 +84,8 @@ class SiteSurveys:
         for survey_schedule in self.get_survey_schedules():
             for survey in survey_schedule.surveys:
                 surveys.append(survey)
-        surveys.sort(key=lambda x: x.label)
+        if surveys:
+            surveys.sort(key=lambda x: x.survey_schedule.split('.')[0] + str(x.position))
         return surveys
 
     def get_survey_names(self, *group_names):

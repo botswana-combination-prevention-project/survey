@@ -31,6 +31,7 @@ survey_three = SurveySchedule(
 
 baseline = Survey(
     name='baseline',
+    position=0,
     map_area='test_community',
     start_date=(get_utcnow() - relativedelta(years=3)).date(),
     end_date=(get_utcnow() - relativedelta(years=2)).date(),
@@ -39,6 +40,7 @@ baseline = Survey(
 
 annual_1 = Survey(
     name='annual-1',
+    position=1,
     map_area='test_community',
     start_date=(get_utcnow() - relativedelta(years=3)).date(),
     end_date=(get_utcnow() - relativedelta(years=2)).date(),
@@ -47,6 +49,7 @@ annual_1 = Survey(
 
 annual_2 = Survey(
     name='annual-2',
+    position=2,
     map_area='test_community',
     start_date=(get_utcnow() - relativedelta(years=3)).date(),
     end_date=(get_utcnow() - relativedelta(years=2)).date(),
