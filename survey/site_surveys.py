@@ -99,7 +99,7 @@ class SiteSurveys:
     def get_survey_schedule_group_names(self):
         group_names = []
         survey_schedule_collection = self.get_survey_schedules()
-        for survey_schedule in survey_schedule_collection.get(None):
+        for survey_schedule in survey_schedule_collection:
             group_names.append(survey_schedule.group_name)
         return group_names
 
