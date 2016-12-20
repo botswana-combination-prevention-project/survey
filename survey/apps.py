@@ -58,9 +58,15 @@ class AppConfig(DjangoApponfig):
             pass
         for current_survey in self.current_surveys:
             if not site_surveys.get_survey_schedules(group_name=current_survey.group_name):
-                raise SurveyError(
-                    'Invalid group name. Got \'{}\'. Expected one of {}. See survey.apps.AppConfig'.format(
-                        current_survey.group_name, site_surveys.get_survey_schedule_group_names()))
+                try:
+                    survey_schedule_group_names = site_surveys.get_survey_schedule_group_names()
+                    raise SurveyError(
+                        'Invalid group name. Got \'{}\'. Expected one of {}. See survey.apps.AppConfig'.format(
+                            current_survey.group_name, survey_schedule_group_names))
+                except AttributeError as e:
+                    raise SurveyError(
+                        'Have you installed any surveys?. See survey.apps.AppConfig and surveys.py. Got {}'.format(
+                            str(e)))
         if not site_surveys.get_surveys(*self.current_surveys):
             raise SurveyError(
                 'Current surveys listed in AppConfig do not correspond with any surveys in surveys.py. '
