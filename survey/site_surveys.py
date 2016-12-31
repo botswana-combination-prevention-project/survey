@@ -80,6 +80,7 @@ class SiteSurveys:
 
     @property
     def surveys(self):
+        """Returns an ordered list of surveys."""
         surveys = []
         for survey_schedule in self.get_survey_schedules():
             for survey in survey_schedule.surveys:
