@@ -45,7 +45,7 @@ class SiteSurveys:
         self.registry.append(survey_schedule)
 
     def get_survey_schedule(self, name):
-        group_name, name = name.split('.')[0]
+        group_name, name = name.split('.')
         try:
             survey_schedule = [s for s in self.registry if s.name == name and s.group_name == group_name][0]
         except IndexError:
@@ -103,6 +103,16 @@ class SiteSurveys:
         for survey_schedule in survey_schedule_collection:
             group_names.append(survey_schedule.group_name)
         return group_names
+
+    def get_survey_from_full_label(self, label):
+        print(label)
+        group_name, survey_schedule_name, survey_name, map_area = label.split('.')
+        print(group_name, survey_schedule_name, survey_name, map_area)
+        survey_schedule = self.get_survey_schedule('.'.join([group_name, survey_schedule_name]))
+        for survey in survey_schedule.surveys:
+            if survey.name == survey_name and survey.map_area == map_area:
+                return survey
+        return None
 
     def autodiscover(self, module_name=None):
         """Autodiscovers classes in the surveys.py file of any INSTALLED_APP."""
