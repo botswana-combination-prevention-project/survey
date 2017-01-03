@@ -36,5 +36,9 @@ class Survey:
         return '{}.{}.{}'.format(self.survey_schedule, self.name, self.map_area)
 
     @property
+    def short_name(self):
+        return '{}.{}'.format(self.survey_schedule.split('.')[1], self.name.upper())
+
+    @property
     def map_area_display(self):
         return ' '.join([word[0].upper() for word in self.map_area.split('_')])
