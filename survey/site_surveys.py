@@ -37,11 +37,11 @@ class SiteSurveys:
         if survey_schedule.name in [survey_schedule.name for survey_schedule in self.registry]:
             raise AlreadyRegistered('Survey Schedule {} is already registered.'.format(survey_schedule))
         for schedule in self.get_survey_schedules(group_name=survey_schedule.group_name):
-            if survey_schedule.start_date == schedule.start_date:
+            if survey_schedule.start == schedule.start:
                 raise AlreadyRegistered(
                     'Survey Schedule {} is already registered using start date {}. '
                     'Unable to registered {}.'.format(
-                        schedule.name, survey_schedule.start_date.strftime('%Y-%m-%d'), survey_schedule.name))
+                        schedule.name, survey_schedule.start.strftime('%Y-%m-%d'), survey_schedule.name))
         self.registry.append(survey_schedule)
 
     def get_survey_schedule(self, name):
@@ -65,7 +65,7 @@ class SiteSurveys:
                     schedules.append(survey_schedule)
         else:
             schedules = self.registry
-        schedules.sort(key=lambda o: o.start_date)
+        schedules.sort(key=lambda o: o.start)
         return schedules
 
     def get_surveys(self, *current_surveys):

@@ -14,46 +14,46 @@ from .survey_schedule import SurveySchedule
 survey_one = SurveySchedule(
     name='year-1',
     group_name='test_survey',
-    start_date=(get_utcnow() - relativedelta(years=3)).date(),
-    end_date=(get_utcnow() - relativedelta(years=2)).date())
+    start=(get_utcnow() - relativedelta(years=3)),
+    end=(get_utcnow() - relativedelta(years=2)))
 
 survey_two = SurveySchedule(
     name='year-2',
     group_name='test_survey',
-    start_date=(get_utcnow() - relativedelta(years=2)).date(),
-    end_date=(get_utcnow() - relativedelta(years=1)).date())
+    start=(get_utcnow() - relativedelta(years=2)),
+    end=(get_utcnow() - relativedelta(years=1)))
 
 survey_three = SurveySchedule(
     name='year-3',
     group_name='test_survey',
-    start_date=(get_utcnow() - relativedelta(years=1)).date(),
-    end_date=get_utcnow().date())
+    start=(get_utcnow() - relativedelta(years=1)),
+    end=get_utcnow())
 
 baseline = Survey(
     name='baseline',
     position=0,
     map_area='test_community',
-    start_date=(get_utcnow() - relativedelta(years=3)).date(),
-    end_date=(get_utcnow() - relativedelta(years=2)).date(),
-    full_enrollment_date=(get_utcnow() - relativedelta(years=2)).date()
+    start=(get_utcnow() - relativedelta(years=3)),
+    end=(get_utcnow() - relativedelta(years=2)),
+    full_enrollment_datetime=(get_utcnow() - relativedelta(years=2))
 )
 
 annual_1 = Survey(
     name='annual-1',
     position=1,
     map_area='test_community',
-    start_date=(get_utcnow() - relativedelta(years=3)).date(),
-    end_date=(get_utcnow() - relativedelta(years=2)).date(),
-    full_enrollment_date=(get_utcnow() - relativedelta(years=2)).date()
+    start=(get_utcnow() - relativedelta(years=3)),
+    end=(get_utcnow() - relativedelta(years=2)),
+    full_enrollment_datetime=(get_utcnow() - relativedelta(years=2))
 )
 
 annual_2 = Survey(
     name='annual-2',
     position=2,
     map_area='test_community',
-    start_date=(get_utcnow() - relativedelta(years=3)).date(),
-    end_date=(get_utcnow() - relativedelta(years=2)).date(),
-    full_enrollment_date=(get_utcnow() - relativedelta(years=2)).date()
+    start=(get_utcnow() - relativedelta(years=3)),
+    end=(get_utcnow() - relativedelta(years=2)),
+    full_enrollment_datetime=(get_utcnow() - relativedelta(years=2))
 )
 
 survey_one.add_survey(baseline, annual_1, annual_2)
