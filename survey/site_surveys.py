@@ -105,9 +105,7 @@ class SiteSurveys:
         return group_names
 
     def get_survey_from_full_label(self, label):
-        print(label)
         group_name, survey_schedule_name, survey_name, map_area = label.split('.')
-        print(group_name, survey_schedule_name, survey_name, map_area)
         survey_schedule = self.get_survey_schedule('.'.join([group_name, survey_schedule_name]))
         for survey in survey_schedule.surveys:
             if survey.name == survey_name and survey.map_area == map_area:
