@@ -44,7 +44,13 @@ class SurveySchedule:
 
     @property
     def surveys(self):
+        """Returns all surveys in the schedule."""
         return self.registry
+
+    @property
+    def current_surveys(self):
+        """Returns the surveys in the schedule that, according to app_config, are current."""
+        return [survey for survey in self.registry if survey.current]
 
     def add_survey(self, *surveys):
         for survey in surveys:
@@ -72,7 +78,7 @@ class SurveySchedule:
                             self.name, survey.map_area))
 #             if self.get_surveys(map_area=survey.map_area, reference_date=survey.start):
 #                 raise AddSurveyOverlapError()
-            survey.survey_schedule = self.label
+            survey.survey_schedule = self
             self.registry.append(survey)
         self._reorder()
 
@@ -95,4 +101,5 @@ class SurveySchedule:
             surveys = [s for s in self.registry if s.map_area == map_area]
         elif reference_datetime:
             surveys = [s for s in self.registry if in_datetime_range(s, reference_datetime)]
+        surveys.sort(key=lambda x: x.start)
         return surveys

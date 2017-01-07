@@ -9,9 +9,10 @@ fake = Faker()
 
 class SurveyMixin():
 
-    def make_survey_schedule(self, **options):
+    def make_survey_schedule(self, group_name=None, name=None, **options):
         return SurveySchedule(
-            name=fake.safe_color_name,
+            name=name or fake.safe_color_name(),
+            group_name=group_name or 'test_survey',
             start=(get_utcnow() - relativedelta(years=5)),
             end=(get_utcnow() - relativedelta(years=1)),
             **options)

@@ -9,6 +9,7 @@ class Survey:
     def __init__(self, name=None, map_area=None, start=None, end=None,
                  full_enrollment_datetime=None, position=None):
         self.survey_schedule = None  # set when registered to a survey_schedule
+        self.current = False
         self.name = name
         self.position = position
         self.map_area = map_area
@@ -32,7 +33,7 @@ class Survey:
                         self.map_area))
 
     def __repr__(self):
-        return '{}(\'{label}\', {start}, {end})'.format(
+        return '{}(\'{}\', {}, {})'.format(
             self.__class__.__name__,
             self.label,
             self.start.strftime('%Y-%m-%d %Z'),
@@ -43,11 +44,23 @@ class Survey:
 
     @property
     def label(self):
-        return '{}.{}.{}'.format(self.survey_schedule, self.name, self.map_area)
+        return '{}.{}.{}'.format(self.survey_schedule.name, self.name, self.map_area)
 
     @property
     def short_name(self):
-        return '{}.{}'.format(self.survey_schedule.split('.')[1], self.name.upper())
+        return '{}.{}'.format(self.survey_schedule.name, self.name.upper())
+
+    @property
+    def long_name(self):
+        """Returns the survey string stored in model instances with
+        the `survey` field, e.g. household_structure."""
+        return '{}.{}.{}.{}'.format(
+            self.survey_schedule.group_name, self.survey_schedule.name, self.name, self.map_area)
+
+    @property
+    def field_name(self):
+        """Convenience method for models."""
+        return self.long_name
 
     @property
     def map_area_display(self):
@@ -60,3 +73,15 @@ class Survey:
     @property
     def rend(self):
         return arrow.Arrow.fromdatetime(self.end, self.end.tzinfo).to('utc')
+
+    @property
+    def previous(self):
+        """Returns the previous current survey or None."""
+        from .site_surveys import site_surveys
+        return site_surveys.previous(self)
+
+    @property
+    def next(self):
+        """Returns the next current survey or None."""
+        from .site_surveys import site_surveys
+        return site_surveys.next(self)

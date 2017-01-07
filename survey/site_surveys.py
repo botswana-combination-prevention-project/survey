@@ -20,6 +20,10 @@ class SiteSurveys:
     def __init__(self):
         self._registry = []
         self.loaded = False
+        self.loaded_current = False
+        self.current_surveys = []
+        self._backup_registry = []
+        self._backup_current_surveys = []
 
     @property
     def registry(self):
@@ -28,9 +32,22 @@ class SiteSurveys:
                 'Registry not loaded. Is AppConfig for \'survey\' declared in settings?.')
         return self._registry
 
+    def backup_registry(self):
+        self._backup_current_surveys = copy.copy(self.current_surveys)
+        self._backup_registry = copy.copy(self._registry)
+
+    def restore_registry(self):
+        self._registry = copy.copy(self._backup_registry)
+        self.current_surveys = copy.copy(self._backup_current_surveys)
+        self._backup_registry = []
+        self._backup_current_surveys = []
+
     def clear_registry(self):
+        self.backup_registry()
         self._registry = []
+        self.current_surveys = []
         self.loaded = False
+        self.loaded_current = False
 
     def register(self, survey_schedule):
         self.loaded = True
@@ -43,6 +60,35 @@ class SiteSurveys:
                     'Unable to registered {}.'.format(
                         schedule.name, survey_schedule.start.strftime('%Y-%m-%d'), survey_schedule.name))
         self.registry.append(survey_schedule)
+
+    def register_current(self, *slist):
+        if not self.loaded:
+            raise RegistryNotLoaded(
+                'Registry not loaded. Register ALL surveys before registering the current surveys.')
+        for s in slist:
+            if not self.get_survey_schedules(group_name=s.group_name):
+                try:
+                    survey_schedule_group_names = self.get_survey_schedule_group_names()
+                    raise SurveyError(
+                        'Invalid group name. Got \'{}\'. Expected one of {}. '
+                        'See survey.apps.AppConfig'.format(
+                            s.group_name, survey_schedule_group_names))
+                except AttributeError as e:
+                    raise SurveyError(
+                        'Have you installed any surveys?. See survey.apps.AppConfig '
+                        'and surveys.py. Got {}'.format(
+                            str(e)))
+        if not self.get_surveys(*slist):
+            raise SurveyError(
+                'Current surveys listed in AppConfig do not correspond with any surveys in surveys.py. '
+                'Got: \n *{}\n Expected one of: \n *{}\n See survey.apps.AppConfig and surveys.py'.format(
+                    ',\n *'.join([s.name for s in slist]),
+                    ',\n *'.join([s.field_name for s in self.surveys])))
+        for survey in self.surveys:
+            if survey.long_name in [s.name for s in slist]:
+                survey.current = True
+                self.current_surveys.append(survey)
+        self.current_surveys.sort(key=lambda x: x.start)
 
     def get_survey_schedule(self, name):
         group_name, name = name.split('.')
@@ -68,25 +114,33 @@ class SiteSurveys:
         schedules.sort(key=lambda o: o.start)
         return schedules
 
+    def get_survey(self, field_name):
+        """Returns a survey object using the long name."""
+        try:
+            return [survey for survey in self.surveys if survey.field_name == field_name][0]
+        except IndexError:
+            return None
+
     def get_surveys(self, *current_surveys):
         surveys = []
-        for current_survey in current_surveys:
+        for s in current_surveys:
             for survey_schedule in self.get_survey_schedules():
-                if survey_schedule.name == current_survey.survey_schedule:
+                if survey_schedule.name == s.survey_schedule_name:
                     for survey in survey_schedule.surveys:
-                        if survey.name == current_survey.survey_name and survey.map_area == current_survey.map_area:
+                        if (survey.name == s.survey_name and
+                                survey.map_area == s.map_area):
                             surveys.append(survey)
         return surveys
 
     @property
     def surveys(self):
-        """Returns an ordered list of surveys."""
+        """Returns an ordered list of all surveys registered with the system.
+
+        See also `current_surveys`."""
         surveys = []
         for survey_schedule in self.get_survey_schedules():
             for survey in survey_schedule.surveys:
                 surveys.append(survey)
-        if surveys:
-            surveys.sort(key=lambda x: x.survey_schedule.split('.')[0] + str(x.position))
         return surveys
 
     def get_survey_names(self, *group_names):
@@ -111,6 +165,37 @@ class SiteSurveys:
             if survey.name == survey_name and survey.map_area == map_area:
                 return survey
         return None
+
+    @property
+    def map_areas(self):
+        """Extracts ALL map_areas listed in surveys registered to the system."""
+        map_areas = []
+        for s in self.surveys:
+            map_areas.append(s.map_area)
+        return list(set(map_areas))
+
+    @property
+    def current_map_areas(self):
+        """Extracts map_areas listed in current surveys."""
+        map_areas = []
+        for s in self.current_surveys:
+            map_areas.append(s.map_area)
+        return list(set(map_areas))
+
+    def previous(self, survey):
+        previous_surveys = [s for s in self.current_surveys if s.start < survey.start]
+        try:
+            return previous_surveys[-1:][0]
+        except IndexError:
+            return None
+
+    def next(self, survey):
+        """Returns the next current survey or None."""
+        next_surveys = [s for s in self.current_surveys if s.start > survey.start]
+        try:
+            return next_surveys[0]
+        except IndexError:
+            return None
 
     def autodiscover(self, module_name=None):
         """Autodiscovers classes in the surveys.py file of any INSTALLED_APP."""
