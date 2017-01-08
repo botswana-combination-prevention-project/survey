@@ -11,5 +11,9 @@ class SurveyModelMixin(models.Model):
     def survey_object(self):
         return site_surveys.get_survey_from_field_value(self.survey)
 
+    @property
+    def survey_object(self):
+        return site_surveys.get_survey_from_field_value(self.survey)
+
     class Meta:
         abstract = True
