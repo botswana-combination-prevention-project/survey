@@ -293,5 +293,5 @@ class TestSurveyOrder(SurveyMixin, TestCase):
         site_surveys.register(self.survey_schedule)
         site_surveys.register_current(*self.current_surveys)
         for survey in site_surveys.surveys:
-            if survey.field_name in [survey.field_name for survey in site_surveys.current_surveys]:
+            if survey.field_value in [survey.field_value for survey in site_surveys.current_surveys]:
                 self.assertTrue(survey.current)

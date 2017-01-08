@@ -7,18 +7,9 @@ from django.conf import settings
 from django.core.management.color import color_style
 
 from .site_surveys import site_surveys
+from .survey import S
 
 style = color_style()
-
-
-class S:
-    def __init__(self, s, inactive=None):
-        self.group_name, self.survey_schedule_name, self.survey_name, self.map_area = s.split('.')
-        self.name = s
-        self.inactive = inactive
-
-    def __str__(self):
-        return '{}{}'.format(self.name, '' if not self.inactive else ' - inactive')
 
 
 class AppConfig(DjangoApponfig):
@@ -49,6 +40,6 @@ class AppConfig(DjangoApponfig):
             site_surveys.register_current(*self.current_surveys)
         sys.stdout.write(' * current surveys are:.\n')
         for survey in site_surveys.current_surveys:
-            sys.stdout.write('   - {}\n'.format(survey.field_name))
+            sys.stdout.write('   - {}\n'.format(survey.field_value))
         sys.stdout.write(' * detected map_areas: \'{}\'\n'.format(', '.join(site_surveys.current_map_areas)))
         sys.stdout.write(' Done loading {}.\n'.format(self.verbose_name))

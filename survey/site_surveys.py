@@ -6,9 +6,10 @@ import sys
 from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
 
-from survey.exceptions import (
+from .exceptions import (
     SurveyScheduleError, RegistryNotLoaded, AlreadyRegistered, SurveyError, AddSurveyDateError,
     AddSurveyMapAreaError, AddSurveyOverlapError, AddSurveyNameError)
+from .survey import S
 
 
 class SiteSurveys:
@@ -83,7 +84,7 @@ class SiteSurveys:
                 'Current surveys listed in AppConfig do not correspond with any surveys in surveys.py. '
                 'Got: \n *{}\n Expected one of: \n *{}\n See survey.apps.AppConfig and surveys.py'.format(
                     ',\n *'.join([s.name for s in slist]),
-                    ',\n *'.join([s.field_name for s in self.surveys])))
+                    ',\n *'.join([s.field_value for s in self.surveys])))
         for survey in self.surveys:
             if survey.long_name in [s.name for s in slist]:
                 survey.current = True
@@ -114,10 +115,10 @@ class SiteSurveys:
         schedules.sort(key=lambda o: o.start)
         return schedules
 
-    def get_survey(self, field_name):
+    def get_survey(self, field_value):
         """Returns a survey object using the long name."""
         try:
-            return [survey for survey in self.surveys if survey.field_name == field_name][0]
+            return [survey for survey in self.surveys if survey.field_value == field_value][0]
         except IndexError:
             return None
 
@@ -158,12 +159,13 @@ class SiteSurveys:
             group_names.append(survey_schedule.group_name)
         return group_names
 
-    def get_survey_from_full_label(self, label):
-        group_name, survey_schedule_name, survey_name, map_area = label.split('.')
-        survey_schedule = self.get_survey_schedule('.'.join([group_name, survey_schedule_name]))
-        for survey in survey_schedule.surveys:
-            if survey.name == survey_name and survey.map_area == map_area:
-                return survey
+    def get_survey_from_field_value(self, field_value):
+        if field_value:
+            s = S(field_value)
+            survey_schedule = self.get_survey_schedule('.'.join([s.group_name, s.survey_schedule_name]))
+            for survey in survey_schedule.surveys:
+                if survey.name == s.survey_name and survey.map_area == s.map_area:
+                    return survey
         return None
 
     @property
