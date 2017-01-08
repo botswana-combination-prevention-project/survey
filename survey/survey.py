@@ -56,7 +56,7 @@ class Survey:
     def __repr__(self):
         return '{}(\'{}\', {}, {})'.format(
             self.__class__.__name__,
-            self.label,
+            self.field_value,
             self.start.strftime('%Y-%m-%d %Z'),
             self.end.strftime('%Y-%m-%d %Z'))
 

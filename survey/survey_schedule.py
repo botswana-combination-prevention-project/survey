@@ -20,13 +20,6 @@ class SurveySchedule:
         if self.start == self.end:
             raise SurveyScheduleError('Invalid Survey schedule. Start date may not equal end date')
 
-    def __repr__(self):
-        return '{}(\'{label}\', {start}, {end})'.format(
-            self.__class__.__name__,
-            self.label,
-            self.start.strftime('%Y-%m-%d %Z'),
-            self.end.strftime('%Y-%m-%d %Z'))
-
     def __str__(self):
         return self.label
 
