@@ -183,7 +183,7 @@ class SiteSurveys:
                     return survey
         return None
 
-    def get_surveys_from_survey_schedule_field_value(self, parent_field_value):
+    def get_surveys_from_survey_schedule_field_value(self, field_value):
         """Returns an ordered list of surveys with the same parent
         field name."""
         surveys = []
