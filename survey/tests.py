@@ -14,10 +14,10 @@ from .site_surveys import site_surveys
 from .survey import Survey
 from .sparser import S
 from .survey_schedule import SurveySchedule
-from .test_mixins import SurveyMixin
+from .test_mixins import SurveyTestMixin
 
 
-class TestSurvey(SurveyMixin, TestCase):
+class TestSurvey(SurveyTestMixin, TestCase):
 
     def setUp(self):
         site_surveys.clear_registry()
@@ -216,7 +216,7 @@ class TestSurvey(SurveyMixin, TestCase):
             reference_datetime=survey_schedule.start + relativedelta(days=80)))
 
 
-class TestSurveyOrder(SurveyMixin, TestCase):
+class TestSurveyOrder(SurveyTestMixin, TestCase):
 
     def setUp(self):
         site_surveys.clear_registry()
@@ -339,7 +339,7 @@ class TestSurveyParser(TestCase):
         self.assertEqual(s.field_value, 'bcpp_survey.year-1.ess.test_community')
 
 
-class TestSiteSurvey(SurveyMixin, TestCase):
+class TestSiteSurvey(SurveyTestMixin, TestCase):
 
     def test_get_survey_by_field_value(self):
         app_config = django_apps.get_app_config('survey')
