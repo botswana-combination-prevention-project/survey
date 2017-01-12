@@ -16,7 +16,7 @@ class SurveySchedule(MapAreaMixin, DateMixin):
         self.survey_groups = []
 
     def __str__(self):
-        return self.label
+        return self.short_name
 
     @property
     def rstart(self):
@@ -27,7 +27,7 @@ class SurveySchedule(MapAreaMixin, DateMixin):
         return arrow.Arrow.fromdatetime(self.end, self.end.tzinfo).to('utc')
 
     @property
-    def label(self):
+    def short_name(self):
         return '{}.{}'.format(self.group_name, self.name)
 
     @property
