@@ -26,7 +26,7 @@ class SurveyModelMixin(SurveyScheduleModelMixin):
 
     @property
     def survey_object(self):
-        s = S(self.survey_schedule, survey=self.survey)
+        s = S(self.survey_schedule, survey_name=self.survey)
         return site_surveys.get_survey_from_field_value(s.survey_field_value)
 
     class Meta:

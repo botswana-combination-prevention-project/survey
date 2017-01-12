@@ -20,10 +20,12 @@ class MapAreaMixin:
         return self._map_area_from_settings()
 
     def _map_area_from_settings(self):
+        """Returns a map area from settings or raises for when the map
+        area is not provided."""
         try:
             return settings.CURRENT_MAP_AREA
         except AttributeError:
-            pass
+            raise SurveyMapAreaError('Unable to determine the current map area.')
         return None
 
     def validate_map_area(self):

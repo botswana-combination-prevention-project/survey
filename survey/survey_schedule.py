@@ -44,6 +44,14 @@ class SurveySchedule(MapAreaMixin, DateMixin):
         """Returns the surveys in the schedule that, according to app_config, are current."""
         return [survey for survey in self.registry if survey.current]
 
+    def get_survey(self, name):
+        """Returns the surveys in the schedule that, according to app_config, are current."""
+        surveys = [survey for survey in self.registry if survey.name == name]
+        try:
+            return surveys[0]
+        except IndexError:
+            return None
+
     @property
     def current(self):
         return self.current_surveys
