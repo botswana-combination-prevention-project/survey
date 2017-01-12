@@ -1,24 +1,19 @@
 # coding=utf-8
 import arrow
 
-from survey.exceptions import (
-    SurveyScheduleError, AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError)
+from .mixins import MapAreaMixin, DateMixin
+from .exceptions import AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError
 
 
-class SurveySchedule:
+class SurveySchedule(MapAreaMixin, DateMixin):
 
-    def __init__(self, name=None, group_name=None, start=None, end=None, map_areas=None):
+    def __init__(self, name=None, group_name=None, start=None, end=None,
+                 map_area=None, map_areas=None):
+        self.name = name  # e.g. year-1, year-2, ...
+        super().__init__(map_area=map_area, map_areas=map_areas, start=start, end=end)
         self.registry = []
         self.group_name = group_name  # e.g. ESS
         self.survey_groups = []
-        self.map_areas = map_areas  # if none, except any map_area
-        self.name = name  # e.g. year-1, year-2, ...
-        self.start = arrow.Arrow.fromdatetime(start, start.tzinfo).to('utc').floor('hour').datetime
-        self.end = arrow.Arrow.fromdatetime(end, end.tzinfo).to('utc').ceil('hour').datetime
-        if self.start > self.end:
-            raise SurveyScheduleError('Invalid Survey schedule. Start date may not precede end date')
-        if self.start == self.end:
-            raise SurveyScheduleError('Invalid Survey schedule. Start date may not equal end date')
 
     def __str__(self):
         return self.label
@@ -41,9 +36,29 @@ class SurveySchedule:
         return self.registry
 
     @property
+    def field_value(self):
+        return '{}.{}.{}'.format(self.group_name, self.name, self.map_area)
+
+    @property
     def current_surveys(self):
         """Returns the surveys in the schedule that, according to app_config, are current."""
         return [survey for survey in self.registry if survey.current]
+
+    @property
+    def current(self):
+        return self.current_surveys
+
+    @property
+    def previous(self):
+        """Returns the previous current survey or None."""
+        from .site_surveys import site_surveys
+        return site_surveys.previous_survey_schedule(self)
+
+    @property
+    def next(self):
+        """Returns the next current survey or None."""
+        from .site_surveys import site_surveys
+        return site_surveys.next_survey_schedule(self)
 
     def add_survey(self, *surveys):
         for survey in surveys:

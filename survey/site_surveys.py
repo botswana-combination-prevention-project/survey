@@ -9,7 +9,7 @@ from django.utils.module_loading import import_module, module_has_submodule
 from .exceptions import (
     SurveyScheduleError, RegistryNotLoaded, AlreadyRegistered, SurveyError, AddSurveyDateError,
     AddSurveyMapAreaError, AddSurveyOverlapError, AddSurveyNameError)
-from .survey import S
+from .sparser import S
 
 
 class SiteSurveys:
@@ -101,7 +101,13 @@ class SiteSurveys:
                     name, ', '.join([s.name for s in self.registry])))
         return survey_schedule
 
-    def get_survey_schedules(self, group_name=None):
+    def get_survey_schedule_from_field_value(self, field_value):
+        if field_value:
+            s = S(field_value)
+            return self.get_survey_schedule('{}.{}'.format(s.group_name, s.survey_schedule_name))
+        return None
+
+    def get_survey_schedules(self, group_name=None, current=None):
         """Returns a [<list of survey_schedules>].
 
         None is a valid group_name that returns all survey_schedules."""
@@ -112,26 +118,34 @@ class SiteSurveys:
                     schedules.append(survey_schedule)
         else:
             schedules = self.registry
+        if current:
+            schedules = [s for s in schedules if s.current]
         schedules.sort(key=lambda o: o.start)
         return schedules
 
-    def get_survey(self, field_value):
+    def get_survey(self, field_value, current=None):
         """Returns a survey object using the long name."""
         try:
-            return [survey for survey in self.surveys if survey.field_value == field_value][0]
+            surveys = [survey for survey in self.surveys if survey.field_value == field_value]
+            if current:
+                return [survey for survey in surveys if survey.current][0]
+            else:
+                return surveys[0]
         except IndexError:
             return None
 
-    def get_surveys(self, *current_surveys):
-        surveys = []
-        for s in current_surveys:
+    def get_surveys(self, *surveys, current=None):
+        selected = []
+        for item in surveys:
             for survey_schedule in self.get_survey_schedules():
-                if survey_schedule.name == s.survey_schedule_name:
+                if survey_schedule.name == item.survey_schedule_name:
                     for survey in survey_schedule.surveys:
-                        if (survey.name == s.survey_name and
-                                survey.map_area == s.map_area):
-                            surveys.append(survey)
-        return surveys
+                        if (survey.name == item.survey_name and
+                                survey.map_area == item.map_area):
+                            selected.append(survey)
+        if current:
+            return [survey for survey in selected if survey.current]
+        return selected
 
     @property
     def surveys(self):
@@ -142,6 +156,7 @@ class SiteSurveys:
         for survey_schedule in self.get_survey_schedules():
             for survey in survey_schedule.surveys:
                 surveys.append(survey)
+        surveys.sort(key=lambda x: x.start)
         return surveys
 
     def get_survey_names(self, *group_names):
@@ -168,6 +183,35 @@ class SiteSurveys:
                     return survey
         return None
 
+    def get_surveys_from_survey_schedule_field_value(self, parent_field_value):
+        """Returns an ordered list of surveys with the same parent
+        field name."""
+        surveys = []
+        group_name, survey_schedule_name, _ = parent_field_value.split
+        survey_schedule = self.get_survey_schedule('.'.join([group_name, survey_schedule_name]))
+        for survey in survey_schedule.surveys:
+            if survey.parent_field_value == parent_field_value:
+                surveys.append(survey)
+        surveys.sort(key=lambda x: x.start)
+        return surveys
+
+#     def get_survey_from_report_datetime(self, report_datetime, current=None):
+#         """Returns the first survey found that for this report_datetime.
+#
+#         This may not be reliable if current is not set to True"""
+#         if report_datetime:
+#             rdate = arrow.Arrow.fromdatetime(report_datetime, report_datetime.tzinfo)
+#             for survey in self.surveys:
+#                 if (survey.rstart.to('utc').date() <=
+#                         rdate.to('utc').date() <=
+#                         survey.rend.to('utc').date()):
+#                     if current:
+#                         if survey.current:
+#                             return survey
+#                     else:
+#                         return survey
+#         return None
+
     @property
     def map_areas(self):
         """Extracts ALL map_areas listed in surveys registered to the system."""
@@ -184,14 +228,33 @@ class SiteSurveys:
             map_areas.append(s.map_area)
         return list(set(map_areas))
 
-    def previous(self, survey):
+    def previous_survey_schedule(self, survey_schedule):
+        """Returns the previous survey schedule or None."""
+        previous_survey_schedules = [
+            s for s in self.get_survey_schedules(
+                group_name=survey_schedule.group_name) if s.start < survey_schedule.start]
+        try:
+            return previous_survey_schedules[-1:][0]
+        except IndexError:
+            return None
+
+    def next_survey_schedule(self, survey_schedule):
+        """Returns the next survey schedule or None."""
+        next_survey_schedules = [s for s in self.get_survey_schedules(
+            group_name=survey_schedule.group_name) if s.start > survey_schedule.start]
+        try:
+            return next_survey_schedules[0]
+        except IndexError:
+            return None
+
+    def previous_survey(self, survey):
         previous_surveys = [s for s in self.current_surveys if s.start < survey.start]
         try:
             return previous_surveys[-1:][0]
         except IndexError:
             return None
 
-    def next(self, survey):
+    def next_survey(self, survey):
         """Returns the next current survey or None."""
         next_surveys = [s for s in self.current_surveys if s.start > survey.start]
         try:

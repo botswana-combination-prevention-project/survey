@@ -31,3 +31,13 @@ class RegistryNotLoaded(Exception):
 
 class AlreadyRegistered(Exception):
     pass
+
+
+class SurveyDateError(Exception):
+    pass
+
+
+class SurveyMapAreaError(Exception):
+    pass
+
+

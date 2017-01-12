@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.management.color import color_style
 
 from .site_surveys import site_surveys
-from .survey import S
+from .sparser import S
 
 style = color_style()
 

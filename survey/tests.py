@@ -7,14 +7,14 @@ from django.test import TestCase, tag
 
 from edc_base.utils import get_utcnow
 
-from .exceptions import SurveyScheduleError, AlreadyRegistered, SurveyError
+from .exceptions import (
+    SurveyScheduleError, AlreadyRegistered, SurveyError, AddSurveyDateError,
+    AddSurveyMapAreaError, SurveyDateError)
 from .site_surveys import site_surveys
 from .survey import Survey
+from .sparser import S
 from .survey_schedule import SurveySchedule
 from .test_mixins import SurveyMixin
-from .apps import S
-from survey.exceptions import AddSurveyMapAreaError, AddSurveyDateError, AddSurveyOverlapError
-from survey.surveys import survey_one, survey_two, survey_three
 
 
 class TestSurvey(SurveyMixin, TestCase):
@@ -28,8 +28,8 @@ class TestSurvey(SurveyMixin, TestCase):
                 name='survey-1',
                 start=(get_utcnow() - relativedelta(years=1)),
                 end=get_utcnow())
-        except SurveyScheduleError:
-            self.fail('SurveyScheduleError unexpectedly raised')
+        except SurveyScheduleError as e:
+            self.fail('SurveyScheduleError unexpectedly raised. Got {}'.format(e))
 
     def test_schedule_bad_dates(self):
         try:
@@ -37,8 +37,8 @@ class TestSurvey(SurveyMixin, TestCase):
                 name='survey-1',
                 start=get_utcnow(),
                 end=(get_utcnow() - relativedelta(years=1)))
-            self.fail('SurveyScheduleError unexpectedly NOT raised')
-        except SurveyScheduleError:
+            self.fail('SurveyDateError unexpectedly NOT raised')
+        except SurveyDateError:
             pass
 
     def test_survey_schedule_name_is_unique(self):
@@ -88,7 +88,7 @@ class TestSurvey(SurveyMixin, TestCase):
     def test_create_survey_with_end_precedes_start(self):
         """Assert start date precedes end date."""
         self.assertRaises(
-            SurveyError, Survey,
+            SurveyDateError, Survey,
             map_area='test_community',
             start=get_utcnow(),
             end=(get_utcnow() - relativedelta(years=1)),
@@ -295,3 +295,65 @@ class TestSurveyOrder(SurveyMixin, TestCase):
         for survey in site_surveys.surveys:
             if survey.field_value in [survey.field_value for survey in site_surveys.current_surveys]:
                 self.assertTrue(survey.current)
+
+
+class TestSurveyParser(TestCase):
+
+    def test_s_parser_raises1(self):
+        s = 'ess'
+        self.assertRaises(SurveyError, S, s)
+
+        s = 'bcpp_survey.ess'
+        self.assertRaises(SurveyError, S, s)
+
+    def test_s_parse_survey_schedule(self):
+        s = 'bcpp_survey.year-1.test_community'
+        s = S(s)
+        self.assertEqual(s.group_name, 'bcpp_survey')
+        self.assertEqual(s.survey_schedule_name, 'year-1')
+        self.assertEqual(s.map_area, 'test_community')
+        self.assertEqual(s.survey_field_value, None)
+        self.assertEqual(s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
+        self.assertEqual(s.field_value, 'bcpp_survey.year-1.test_community')
+
+    def test_s_parse_survey_schedule_with_survey(self):
+        s = 'bcpp_survey.year-1.test_community'
+        s = S(s, 'ess')
+        self.assertEqual(s.group_name, 'bcpp_survey')
+        self.assertEqual(s.survey_schedule_name, 'year-1')
+        self.assertEqual(s.survey_name, 'ess')
+        self.assertEqual(s.map_area, 'test_community')
+        self.assertEqual(s.survey_field_value, 'bcpp_survey.year-1.ess.test_community')
+        self.assertEqual(s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
+        self.assertEqual(s.field_value, 'bcpp_survey.year-1.test_community')
+
+    def test_s_parse_survey(self):
+        s = 'bcpp_survey.year-1.ess.test_community'
+        s = S(s)
+        self.assertEqual(s.group_name, 'bcpp_survey')
+        self.assertEqual(s.survey_schedule_name, 'year-1')
+        self.assertEqual(s.survey_name, 'ess')
+        self.assertEqual(s.map_area, 'test_community')
+        self.assertEqual(s.survey_field_value, 'bcpp_survey.year-1.ess.test_community')
+        self.assertEqual(s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
+        self.assertEqual(s.field_value, 'bcpp_survey.year-1.ess.test_community')
+
+
+class TestSiteSurvey(SurveyMixin, TestCase):
+
+    def test_get_survey_by_field_value(self):
+        app_config = django_apps.get_app_config('survey')
+        field_value = app_config.current_surveys[0].field_value
+        self.assertIsNotNone(field_value)
+        survey = site_surveys.get_survey_from_field_value(field_value)
+        self.assertEqual(
+            survey.field_value, field_value)
+
+    def test_get_survey_schedule_by_field_value(self):
+        app_config = django_apps.get_app_config('survey')
+        field_value = app_config.current_surveys[0].field_value
+        self.assertIsNotNone(field_value)
+        s = S(field_value)
+        survey_schedule = site_surveys.get_survey_schedule_from_field_value(field_value)
+        self.assertEqual(
+            survey_schedule.field_value, s.survey_schedule_field_value)
