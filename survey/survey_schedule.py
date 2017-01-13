@@ -68,6 +68,16 @@ class SurveySchedule(MapAreaMixin, DateMixin):
         from .site_surveys import site_surveys
         return site_surveys.next_survey_schedule(self)
 
+    @property
+    def first(self):
+        """Returns the first current survey."""
+        return self.current_surveys[0]
+
+    @property
+    def last(self):
+        """Returns the last current survey."""
+        return self.current_surveys[-1]
+
     def add_survey(self, *surveys):
         for survey in surveys:
             if not (self.start <= survey.start <= self.end):

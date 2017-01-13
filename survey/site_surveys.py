@@ -161,10 +161,15 @@ class SiteSurveys:
 
     def get_survey_names(self, *group_names):
         survey_names = []
-        for group_name in group_names:
-            for survey_schedule in self.get_survey_schedules(group_name=group_name):
+        if group_names:
+            for group_name in group_names:
+                for survey_schedule in self.get_survey_schedules(group_name=group_name):
+                    for survey in survey_schedule.surveys:
+                        survey_names.append(survey.field_value)
+        else:
+            for survey_schedule in self.get_survey_schedules():
                 for survey in survey_schedule.surveys:
-                    survey_names.append(survey.label)
+                    survey_names.append(survey.field_value)
         return survey_names
 
     def get_survey_schedule_group_names(self):
@@ -181,36 +186,12 @@ class SiteSurveys:
             for survey in survey_schedule.surveys:
                 if survey.name == s.survey_name and survey.map_area == s.map_area:
                     return survey
+        raise SurveyError(
+            'Invalid survey string for survey_schedule {}. Got {}. '
+            'Expected one of {}'.format(
+                survey_schedule.field_value,
+                s.field_value, [s.field_value for s in survey_schedule.surveys]))
         return None
-
-    def get_surveys_from_survey_schedule_field_value(self, field_value):
-        """Returns an ordered list of surveys with the same parent
-        field name."""
-        surveys = []
-        group_name, survey_schedule_name, _ = parent_field_value.split
-        survey_schedule = self.get_survey_schedule('.'.join([group_name, survey_schedule_name]))
-        for survey in survey_schedule.surveys:
-            if survey.parent_field_value == parent_field_value:
-                surveys.append(survey)
-        surveys.sort(key=lambda x: x.start)
-        return surveys
-
-#     def get_survey_from_report_datetime(self, report_datetime, current=None):
-#         """Returns the first survey found that for this report_datetime.
-#
-#         This may not be reliable if current is not set to True"""
-#         if report_datetime:
-#             rdate = arrow.Arrow.fromdatetime(report_datetime, report_datetime.tzinfo)
-#             for survey in self.surveys:
-#                 if (survey.rstart.to('utc').date() <=
-#                         rdate.to('utc').date() <=
-#                         survey.rend.to('utc').date()):
-#                     if current:
-#                         if survey.current:
-#                             return survey
-#                     else:
-#                         return survey
-#         return None
 
     @property
     def map_areas(self):

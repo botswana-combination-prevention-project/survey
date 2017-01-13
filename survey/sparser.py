@@ -10,11 +10,18 @@ class S:
     Makes no attempt to validate the values."""
     def __init__(self, s, survey_name=None, inactive=None, ):
         if re.match(survey_pattern, s):
-            (self.group_name, self.survey_schedule_name,
-             self.survey_name, self.map_area) = s.split('.')
+            try:
+                (self.group_name, self.survey_schedule_name,
+                 self.survey_name, self.map_area) = s.split('.')
+            except ValueError as e:
+                raise SurveyError('{} Got {}'.format(str(e), s))
         elif re.match(survey_schedule_pattern, s):
-            self.group_name, self.survey_schedule_name, self.map_area = s.split('.')
-            self.survey_name = survey_name
+            try:
+                self.group_name, self.survey_schedule_name, self.map_area = s.split('.')
+            except ValueError as e:
+                raise SurveyError('{} Got {}'.format(str(e), s))
+            else:
+                self.survey_name = survey_name
         else:
             raise SurveyError('Invalid survey name format. Got {}.'.format(s))
         self.field_value = s

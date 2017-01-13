@@ -1,7 +1,6 @@
 from django.db import models
 
 from .site_surveys import site_surveys
-from .sparser import S
 
 
 class SurveyScheduleModelMixin(models.Model):
@@ -21,13 +20,12 @@ class SurveyScheduleModelMixin(models.Model):
 class SurveyModelMixin(SurveyScheduleModelMixin):
 
     survey = models.CharField(
-        max_length=15,
+        max_length=150,
         help_text="survey name, e.g. ESS, BHS, ...")
 
     @property
     def survey_object(self):
-        s = S(self.survey_schedule, survey_name=self.survey)
-        return site_surveys.get_survey_from_field_value(s.survey_field_value)
+        return site_surveys.get_survey_from_field_value(self.survey)
 
     class Meta:
         abstract = True
