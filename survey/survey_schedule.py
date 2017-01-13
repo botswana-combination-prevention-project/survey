@@ -18,6 +18,13 @@ class SurveySchedule(MapAreaMixin, DateMixin):
     def __str__(self):
         return self.short_name
 
+    def __repr__(self):
+        return '{}(\'{}\', {}, {})'.format(
+            self.__class__.__name__,
+            self.field_value,
+            self.start.strftime('%Y-%m-%d %Z'),
+            self.end.strftime('%Y-%m-%d %Z'))
+
     @property
     def rstart(self):
         return arrow.Arrow.fromdatetime(self.start, self.start.tzinfo).to('utc')
