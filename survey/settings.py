@@ -39,6 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'edc_base.apps.AppConfig',
+    'edc_device.apps.AppConfig',
+    'edc_protocol.apps.AppConfig',
+    # 'edc_registration.apps.AppConfig',
+    'edc_identifier.apps.AppConfig',
     'survey.apps.AppConfig'
 ]
 
@@ -121,3 +126,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+CURRENT_MAP_AREA = 'test_community'

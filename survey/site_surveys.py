@@ -33,22 +33,22 @@ class SiteSurveys:
                 'Registry not loaded. Is AppConfig for \'survey\' declared in settings?.')
         return self._registry
 
-    def backup_registry(self):
+    def backup_registry(self, clear=False):
         self._backup_current_surveys = copy.copy(self.current_surveys)
         self._backup_registry = copy.copy(self._registry)
+        if clear:
+            self._registry = []
+            self.current_surveys = []
+            self.loaded = False
+            self.loaded_current = False
 
     def restore_registry(self):
         self._registry = copy.copy(self._backup_registry)
         self.current_surveys = copy.copy(self._backup_current_surveys)
         self._backup_registry = []
         self._backup_current_surveys = []
-
-    def clear_registry(self):
-        self.backup_registry()
-        self._registry = []
-        self.current_surveys = []
-        self.loaded = False
-        self.loaded_current = False
+        self.loaded = True
+        self.loaded_current = True
 
     def register(self, survey_schedule):
         self.loaded = True
@@ -179,6 +179,13 @@ class SiteSurveys:
             group_names.append(survey_schedule.group_name)
         return group_names
 
+    def get_survey_schedule_field_values(self):
+        field_values = []
+        for survey_schedule in self.get_survey_schedules():
+            field_values.append(survey_schedule.field_value)
+        field_values.sort()
+        return field_values
+
     def get_survey_from_field_value(self, field_value):
         if field_value:
             s = S(field_value)
@@ -186,11 +193,11 @@ class SiteSurveys:
             for survey in survey_schedule.surveys:
                 if survey.name == s.survey_name and survey.map_area == s.map_area:
                     return survey
-        raise SurveyError(
-            'Invalid survey string for survey_schedule {}. Got {}. '
-            'Expected one of {}'.format(
-                survey_schedule.field_value,
-                s.field_value, [s.field_value for s in survey_schedule.surveys]))
+            raise SurveyError(
+                'Invalid survey string for survey_schedule {}. Got {}. '
+                'Expected one of {}'.format(
+                    survey_schedule.field_value,
+                    s.field_value, [s.field_value for s in survey_schedule.surveys]))
         return None
 
     @property

@@ -20,8 +20,7 @@ class SurveyScheduleModelMixin(models.Model):
 class SurveyModelMixin(SurveyScheduleModelMixin):
 
     survey = models.CharField(
-        max_length=150,
-        help_text="survey name, e.g. ESS, BHS, ...")
+        max_length=150)
 
     @property
     def survey_object(self):
