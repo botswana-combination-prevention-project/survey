@@ -16,7 +16,7 @@ class SurveySchedule(MapAreaMixin, DateMixin):
         self.survey_groups = []
 
     def __str__(self):
-        return self.short_name
+        return self.field_value
 
     def __repr__(self):
         return '{}(\'{}\', {}, {})'.format(

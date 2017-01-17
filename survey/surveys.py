@@ -1,7 +1,5 @@
 # coding=utf-8
 
-import sys
-
 from dateutil.relativedelta import relativedelta
 
 from edc_base.utils import get_utcnow
@@ -69,7 +67,7 @@ survey_one.add_survey(baseline, annual_1, annual_2)
 # SurveySchedule(name='bcpp-year-2')
 # SurveySchedule(name='bcpp-year-3')
 
-if 'test' in sys.argv:
-    site_surveys.register(survey_one)
-    site_surveys.register(survey_two)
-    site_surveys.register(survey_three)
+#if 'test' in sys.argv:
+site_surveys.register(survey_one)
+site_surveys.register(survey_two)
+site_surveys.register(survey_three)

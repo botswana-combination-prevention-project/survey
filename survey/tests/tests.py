@@ -7,20 +7,19 @@ from django.test import TestCase, tag
 
 from edc_base.utils import get_utcnow
 
-from .exceptions import (
+from ..exceptions import (
     SurveyScheduleError, AlreadyRegistered, SurveyError, AddSurveyDateError,
     AddSurveyMapAreaError, SurveyDateError)
-from .site_surveys import site_surveys
-from .survey import Survey
-from .sparser import S
-from .survey_schedule import SurveySchedule
-from .test_mixins import SurveyTestMixin
+from ..site_surveys import site_surveys
+from ..survey import Survey
+from ..sparser import S
+from ..survey_schedule import SurveySchedule
+
+from .mixins import SurveyMixin
 
 
-class TestSurvey(SurveyTestMixin, TestCase):
-
-    def setUp(self):
-        site_surveys.clear_registry()
+@tag('erik')
+class TestSurvey(SurveyMixin, TestCase):
 
     def test_schedule_good_dates(self):
         try:
@@ -42,6 +41,7 @@ class TestSurvey(SurveyTestMixin, TestCase):
             pass
 
     def test_survey_schedule_name_is_unique(self):
+        
         for n in range(1, 4):
             survey_schedule = SurveySchedule(
                 name='survey-10',
@@ -161,17 +161,16 @@ class TestSurvey(SurveyTestMixin, TestCase):
             full_enrollment_datetime=survey_schedule.end - relativedelta(days=2))
         self.assertRaises(AddSurveyMapAreaError, survey_schedule.add_survey, survey)
 
-    def test_survey_without_map_areas_accepts_any_map_area(self):
+    def test_survey_without_map_areas_raises(self):
         survey_schedule = self.make_survey_schedule(map_areas=None)
         survey = Survey(
             map_area='blahblah',
             start=survey_schedule.start + relativedelta(days=1),
             end=survey_schedule.end - relativedelta(days=1),
             full_enrollment_datetime=survey_schedule.end - relativedelta(days=2))
-        try:
-            survey_schedule.add_survey(survey)
-        except AddSurveyMapAreaError:
-            self.fail('AddSurveyMapAreaError unexpectedly raised')
+        self.assertRaises(
+            AddSurveyMapAreaError,
+            survey_schedule.add_survey, survey)
 
     def test_get_survey_by_map_area(self):
         survey_schedule = self.make_survey_schedule()
@@ -216,10 +215,12 @@ class TestSurvey(SurveyTestMixin, TestCase):
             reference_datetime=survey_schedule.start + relativedelta(days=80)))
 
 
-class TestSurveyOrder(SurveyTestMixin, TestCase):
+class TestSurveyOrder(SurveyMixin, TestCase):
 
     def setUp(self):
-        site_surveys.clear_registry()
+        super().setUp()
+        site_surveys.backup_registry(clear=True)
+
         self.survey_schedule = self.make_survey_schedule(name='year-1')
         self.survey1 = Survey(
             name='survey1',
@@ -243,10 +244,6 @@ class TestSurveyOrder(SurveyTestMixin, TestCase):
             S('test_survey.year-1.survey1.test_community'),
             S('test_survey.year-1.survey2.test_community'),
             S('test_survey.year-1.survey3.test_community')]
-
-    def tearDown(self):
-        site_surveys.restore_registry()
-        super().tearDown()
 
     def test_surveys_always_ordered(self):
         self.survey_schedule.add_survey(self.survey3, self.survey1, self.survey2)
@@ -339,7 +336,8 @@ class TestSurveyParser(TestCase):
         self.assertEqual(s.field_value, 'bcpp_survey.year-1.ess.test_community')
 
 
-class TestSiteSurvey(SurveyTestMixin, TestCase):
+@tag('erik')
+class TestSiteSurvey(SurveyMixin, TestCase):
 
     def test_get_survey_by_field_value(self):
         app_config = django_apps.get_app_config('survey')

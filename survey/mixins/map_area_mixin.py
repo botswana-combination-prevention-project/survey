@@ -14,7 +14,7 @@ class MapAreaMixin:
 
     @property
     def map_area_display(self):
-        return ' '.join([word[0].upper() for word in self.map_area.split('_')])
+        return ' '.join(self.map_area.split('_')).title()
 
     def get_map_area(self):
         return self._map_area_from_settings()

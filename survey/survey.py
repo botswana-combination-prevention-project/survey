@@ -44,7 +44,7 @@ class Survey(MapAreaMixin, DateMixin):
             self.end.strftime('%Y-%m-%d %Z'))
 
     def __str__(self):
-        return self.long_name
+        return self.field_value
 
     @property
     def short_name(self):
