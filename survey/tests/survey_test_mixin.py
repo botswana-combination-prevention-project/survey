@@ -18,7 +18,7 @@ class SurveyTestMixin:
 
     def tearDown(self):
         super().tearDown()
-        #site_surveys.restore_registry()
+        # site_surveys.restore_registry()
 
     def make_survey_schedule(self, group_name=None, name=None, **options):
         return SurveySchedule(
