@@ -14,7 +14,7 @@ class DatesTestMixin:
         super().setUpClass()
         style = color_style()
         sys.stdout.write(
-            style.WARNING('{}. Overwriting survey dates.\n'.format(
+            style.ERROR('{}. Overwriting survey dates.\n'.format(
                 cls.__name__)))
         if not site_surveys._backup_registry:
             site_surveys.backup_registry(clear=False)
