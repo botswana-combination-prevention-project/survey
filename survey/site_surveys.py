@@ -34,8 +34,8 @@ class SiteSurveys:
         return self._registry
 
     def backup_registry(self, clear=False):
-        self._backup_current_surveys = copy.copy(self.current_surveys)
-        self._backup_registry = copy.copy(self._registry)
+        self._backup_current_surveys = copy.deepcopy(self.current_surveys)
+        self._backup_registry = copy.deepcopy(self._registry)
         if clear:
             self._registry = []
             self.current_surveys = []
@@ -43,8 +43,8 @@ class SiteSurveys:
             self.loaded_current = False
 
     def restore_registry(self):
-        self._registry = copy.copy(self._backup_registry)
-        self.current_surveys = copy.copy(self._backup_current_surveys)
+        self._registry = copy.deepcopy(self._backup_registry)
+        self.current_surveys = copy.deepcopy(self._backup_current_surveys)
         self._backup_registry = []
         self._backup_current_surveys = []
         self.loaded = True
@@ -194,7 +194,7 @@ class SiteSurveys:
                 if survey.name == s.survey_name and survey.map_area == s.map_area:
                     return survey
             raise SurveyError(
-                'Invalid survey string for survey_schedule {}. Got {}. '
+                'Invalid survey name for survey_schedule \'{}\'. Got \'{}\'. '
                 'Expected one of {}'.format(
                     survey_schedule.field_value,
                     s.field_value, [s.field_value for s in survey_schedule.surveys]))

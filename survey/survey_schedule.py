@@ -109,14 +109,10 @@ class SurveySchedule(MapAreaMixin, DateMixin):
                         'Unable to add survey to schedule. Invalid map_area for '
                         'schedule {}. Got {}.'.format(
                             self.name, survey.map_area))
-#             if self.get_surveys(map_area=survey.map_area, reference_date=survey.start):
-#                 raise AddSurveyOverlapError()
             survey.survey_schedule = self
             self.registry.append(survey)
-        self._reorder()
 
-    def _reorder(self):
-        """Keeps the registry ordered."""
+        # keep the registry ordered
         self.registry.sort(key=lambda x: x.start)
 
     def get_surveys(self, map_area=None, reference_datetime=None):
