@@ -91,8 +91,9 @@ class SiteSurveys:
                 self.current_surveys.append(survey)
         self.current_surveys.sort(key=lambda x: x.start)
 
-    def get_survey_schedule(self, name):
-        group_name, name = name.split('.')
+    def get_survey_schedule(self, value):
+        """Returns a survey schedule object or raises and exception."""
+        group_name, name = value.split('.')
         try:
             survey_schedule = [s for s in self.registry if s.name == name and s.group_name == group_name][0]
         except IndexError:
