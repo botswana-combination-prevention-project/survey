@@ -9,10 +9,10 @@ class SurveySchedule(MapAreaMixin, DateMixin):
 
     def __init__(self, name=None, group_name=None, start=None, end=None,
                  map_area=None, map_areas=None):
-        self.name = name  # e.g. year-1, year-2, ...
+        self.name = name  # e.g. year-1 in bcpp-survey.year-1.test_community
         super().__init__(map_area=map_area, map_areas=map_areas, start=start, end=end)
         self.registry = []
-        self.group_name = group_name  # e.g. ESS
+        self.group_name = group_name  # e.g. bcpp-survey in bcpp-survey.year-1.test_community
         self.survey_groups = []
 
     def __str__(self):
