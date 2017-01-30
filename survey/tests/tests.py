@@ -244,19 +244,22 @@ class TestSurveyOrder(SurveyMixin, TestCase):
             map_area='test_community',
             start=self.survey_schedule.start + relativedelta(days=1),
             end=self.survey_schedule.start + relativedelta(days=50),
-            full_enrollment_datetime=self.survey_schedule.start + relativedelta(days=30))
+            full_enrollment_datetime=(self.survey_schedule.start
+                                      + relativedelta(days=30)))
         self.survey2 = Survey(
             name='survey2',
             map_area='test_community',
             start=self.survey_schedule.start + relativedelta(days=51),
             end=self.survey_schedule.start + relativedelta(days=100),
-            full_enrollment_datetime=self.survey_schedule.start + relativedelta(days=80))
+            full_enrollment_datetime=(self.survey_schedule.start
+                                      + relativedelta(days=80)))
         self.survey3 = Survey(
             name='survey3',
             map_area='test_community',
             start=self.survey_schedule.start + relativedelta(days=101),
             end=self.survey_schedule.start + relativedelta(days=150),
-            full_enrollment_datetime=self.survey_schedule.start + relativedelta(days=120))
+            full_enrollment_datetime=(self.survey_schedule.start
+                                      + relativedelta(days=120)))
         self.current_surveys = [
             S('test_survey.year-1.survey1.test_community'),
             S('test_survey.year-1.survey2.test_community'),
@@ -313,7 +316,8 @@ class TestSurveyOrder(SurveyMixin, TestCase):
         site_surveys.register(self.survey_schedule)
         site_surveys.register_current(*self.current_surveys)
         for survey in site_surveys.surveys:
-            if survey.field_value in [survey.field_value for survey in site_surveys.current_surveys]:
+            if survey.field_value in [
+                    survey.field_value for survey in site_surveys.current_surveys]:
                 self.assertTrue(survey.current)
 
 

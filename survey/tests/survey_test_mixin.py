@@ -51,15 +51,19 @@ class SurveyTestMixin:
         You can also just use site_surveys!
 
             * name: survey schedule name, e.g. 'bcpp_year.example-year-1'
-            * field_value: survey schedule field_value, e.g. 'bcpp_year.example-year-1.test_community'
+            * field_value: survey schedule field_value,
+              e.g. 'bcpp_year.example-year-1.test_community'
             * group_name: survey schedule group_name, e.g. 'bcpp_year'.
             * index: list index of the ordered list of survey schedules
-            * current: if current=True only return a survey schedule if it is a current.
-                       If group_name is None, current defaults to True"""
+            * current: if current=True only return a survey schedule
+                       if it is a current. If group_name is None,
+                       current defaults to True
+        """
         if name:
             survey_schedule = site_surveys.get_survey_schedule(name=name)
             if current:
-                survey_schedule = survey_schedule if survey_schedule.current else None
+                survey_schedule = (
+                    survey_schedule if survey_schedule.current else None)
         else:
             current = current if group_name else True
             survey_schedules = site_surveys.get_survey_schedules(

@@ -25,12 +25,14 @@ class Survey(MapAreaMixin, DateMixin):
         self.survey_schedule = None  # set when registered to a survey_schedule
         self.position = position
         self.full_enrollment_datetime = arrow.Arrow.fromdatetime(
-            full_enrollment_datetime, full_enrollment_datetime.tzinfo).to('utc').ceil('hour').datetime
+            full_enrollment_datetime, full_enrollment_datetime.tzinfo).to(
+                'utc').ceil('hour').datetime
         if full_enrollment_datetime:
             if not (self.start < self.full_enrollment_datetime <= self.end):
                 raise SurveyError(
-                    'Invalid Survey. Full enrollment date must be within start and end dates. '
-                    'Got {} < {} <= {} for survey \'{}\'.'.format(
+                    'Invalid Survey. Full enrollment date must be within '
+                    'start and end dates. Got {} < {} <= {} for '
+                    'survey \'{}\'.'.format(
                         self.start.strftime('%Y-%m-%d %Z'),
                         self.full_enrollment_datetime.strftime('%Y-%m-%d %Z'),
                         self.end.strftime('%Y-%m-%d %Z'),

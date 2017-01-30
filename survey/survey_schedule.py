@@ -2,17 +2,21 @@
 import arrow
 
 from .mixins import MapAreaMixin, DateMixin
-from .exceptions import AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError
+from .exceptions import (
+    AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError)
 
 
 class SurveySchedule(MapAreaMixin, DateMixin):
 
     def __init__(self, name=None, group_name=None, start=None, end=None,
                  map_area=None, map_areas=None):
-        self.name = name  # e.g. year-1 in bcpp-survey.year-1.test_community
-        super().__init__(map_area=map_area, map_areas=map_areas, start=start, end=end)
+        # e.g. year-1 in bcpp-survey.year-1.test_community
+        self.name = name
+        super().__init__(
+            map_area=map_area, map_areas=map_areas, start=start, end=end)
         self.registry = []
-        self.group_name = group_name  # e.g. bcpp-survey in bcpp-survey.year-1.test_community
+        # e.g. bcpp-survey in bcpp-survey.year-1.test_community
+        self.group_name = group_name
         self.survey_groups = []
 
     def __str__(self):
@@ -27,7 +31,8 @@ class SurveySchedule(MapAreaMixin, DateMixin):
 
     @property
     def rstart(self):
-        return arrow.Arrow.fromdatetime(self.start, self.start.tzinfo).to('utc')
+        return arrow.Arrow.fromdatetime(
+            self.start, self.start.tzinfo).to('utc')
 
     @property
     def rend(self):
@@ -48,11 +53,15 @@ class SurveySchedule(MapAreaMixin, DateMixin):
 
     @property
     def current_surveys(self):
-        """Returns the surveys in the schedule that, according to app_config, are current."""
+        """Returns the surveys in the schedule that, according
+        to app_config, are current.
+        """
         return [survey for survey in self.registry if survey.current]
 
     def get_survey(self, name):
-        """Returns the surveys in the schedule that, according to app_config, are current."""
+        """Returns the surveys in the schedule that, according to
+        app_config, are current.
+        """
         surveys = [survey for survey in self.registry if survey.name == name]
         try:
             return surveys[0]
@@ -65,49 +74,60 @@ class SurveySchedule(MapAreaMixin, DateMixin):
 
     @property
     def previous(self):
-        """Returns the previous current survey or None."""
+        """Returns the previous current survey or None.
+        """
         from .site_surveys import site_surveys
         return site_surveys.previous_survey_schedule(self)
 
     @property
     def next(self):
-        """Returns the next current survey or None."""
+        """Returns the next current survey or None.
+        """
         from .site_surveys import site_surveys
         return site_surveys.next_survey_schedule(self)
 
     @property
     def first(self):
-        """Returns the first current survey."""
+        """Returns the first current survey.
+        """
         return self.current_surveys[0]
 
     @property
     def last(self):
-        """Returns the last current survey."""
+        """Returns the last current survey.
+        """
         return self.current_surveys[-1]
 
     def add_survey(self, *surveys):
         for survey in surveys:
             if not (self.start <= survey.start <= self.end):
                 raise AddSurveyDateError(
-                    'Unable to add survey to schedule {}. Survey {}.start is invalid. '
-                    'Got {}.'.format(self.name, survey.name, self.start.strftime('%Y-%m-%d %Z')))
+                    'Unable to add survey to schedule {}. Survey {}.start '
+                    'is invalid. Got {}.'.format(
+                        self.name, survey.name,
+                        self.start.strftime('%Y-%m-%d %Z')))
             if not (self.start <= survey.end <= self.end):
                 raise AddSurveyDateError(
-                    'Unable to add survey to schedule {}. Survey {}.end is invalid. '
-                    'Got {}.'.format(self.name, survey.name, self.start.strftime('%Y-%m-%d %Z')))
+                    'Unable to add survey to schedule {}. Survey {}.end '
+                    'is invalid. Got {}.'.format(
+                        self.name,
+                        survey.name,
+                        self.start.strftime('%Y-%m-%d %Z')))
             if survey.name in self.registry:
                 raise AddSurveyNameError(
-                    'Unable to add survey to schedule {}. A Survey with for map_area has already been '
-                    'added. Got {}.'.format(self.name, survey.name))
+                    'Unable to add survey to schedule {}. A Survey with '
+                    'for map_area has already been added. Got {}.'.format(
+                        self.name, survey.name))
             if survey.map_area in self.registry:
                 raise AddSurveyMapAreaError(
-                    'Unable to add survey to schedule {}. A Survey with for map_area has already been '
-                    'added . Got {}.'.format(self.name, survey.name))
+                    'Unable to add survey to schedule {}. A Survey with '
+                    'for map_area has already been added . Got {}.'.format(
+                        self.name, survey.name))
             if self.map_areas:
                 if survey.map_area not in self.map_areas:
                     raise AddSurveyMapAreaError(
-                        'Unable to add survey to schedule. Invalid map_area for '
-                        'schedule {}. Got {}.'.format(
+                        'Unable to add survey to schedule. Invalid '
+                        'map_area for schedule {}. Got {}.'.format(
                             self.name, survey.map_area))
             survey.survey_schedule = self
             self.registry.append(survey)
@@ -116,7 +136,8 @@ class SurveySchedule(MapAreaMixin, DateMixin):
         self.registry.sort(key=lambda x: x.start)
 
     def get_surveys(self, map_area=None, reference_datetime=None):
-        """Returns a list of surveys that meet the criteria."""
+        """Returns a list of surveys that meet the criteria.
+        """
         def in_datetime_range(survey, reference_datetime):
             if survey.start <= reference_datetime <= survey.end:
                 return True
@@ -125,10 +146,13 @@ class SurveySchedule(MapAreaMixin, DateMixin):
         if reference_datetime and map_area:
             surveys = [
                 s for s in self.registry
-                if s.map_area == map_area and in_datetime_range(s, reference_datetime)]
+                if s.map_area == map_area
+                and in_datetime_range(s, reference_datetime)]
         elif map_area:
             surveys = [s for s in self.registry if s.map_area == map_area]
         elif reference_datetime:
-            surveys = [s for s in self.registry if in_datetime_range(s, reference_datetime)]
+            surveys = [
+                s for s in self.registry
+                if in_datetime_range(s, reference_datetime)]
         surveys.sort(key=lambda x: x.start)
         return surveys
