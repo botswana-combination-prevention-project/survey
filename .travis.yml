@@ -26,8 +26,6 @@ install:
 before_script:
   - flake8 survey
   - mysql -e 'create database edc character set utf8;'
-  - python manage.py makemigrations
-  - python manage.py migrate
 
 script: 
   - coverage run --source=survey manage.py test
