@@ -1,34 +1,29 @@
 dist: trusty
 sudo: required
-
 language: python
 python:
-  - "3.5.1"
-
+- 3.5.1
 services:
-  - mysql
-
+- mysql
 before_install:
-    - "export DISPLAY=:99.0"                         
-    - "sh -e /etc/init.d/xvfb start"
-    - sleep 3 # give xvfb some time to start
-
+- export DISPLAY=:99.0
+- sh -e /etc/init.d/xvfb start
+- sleep 3
 branches:
   only:
-    - develop
-
+  - develop
 install:
-  - pip install --upgrade pip
-  - pip install -r requirements.txt
-  - pip install flake8
-  - pip install coveralls
-
+- pip install --upgrade pip
+- pip install -r requirements.txt
+- pip install flake8
+- pip install coveralls
 before_script:
-  - flake8 survey
-  - mysql -e 'create database edc character set utf8;'
-
-script: 
-  - coverage run --source=survey manage.py test
-
+- flake8 survey
+- mysql -e 'create database edc character set utf8;'
+script:
+- coverage run --source=survey manage.py test
 after_success:
-  - coveralls
+- coveralls
+notifications:
+  slack:
+    secure: ttPSLnPGeWIA4Rwyv9Cv8W5u1+pT32f1wsAMDIGv/gWTP806IBUXZ5ta4GkK8U4BjBf9LpAAhYSx3KFc7TlBTVan8NVnTkJJbQVvkF7C3ErzIz80RITNEYAcfveHHN5pm9FpdpehN8Bu2GrGhs7txGtqp47O8Cvtnpbw8VwgnxnfGRS9Qz6tgV8o3tuDgXUYR7ZuBRQ95mcMI4/P2tVgnDcu0HfRgY4R/xm2tJ/qiem3f9ZHZZa1DMmEKxgImK7J/z4Mx2C1sBBM+IY1TRwKMM9PNQ2FRsk/esikiLETZ1IJhsV+zT4bLdnuGtUWnzhEuFMyL5FPRZUOOOYLOi+mf7Sh78UO3a7mSaEGNwOLomERTwBBM5bteEQF8N5UgABbZRPd0pEg16LEvMNi2Kj9sUyWuQVIADuLXzCaEYEr3Aef/oyNPoQH921P48r6y9tFp20xAn8b2wsinRMGS9o4aoXk1yrg1/Z+7kiQFS/WeG/MEcuh6DvbB3y4bHJCN4tZUBQIeOh8iXKVwyRfuj1VIfa2vPOa6keYLZQOVdxHLbxZ0S35LgeVgr8HlcRF7weAxFdVXZkihzjsF68iNe9U+KOMCn+VzRcGBCWiMSeoYJFg0vkGVbI/q/sna9aJ4AuKT3MIv4bNgS8vBqbj3erb9bQmfA21XmwqHAEIz+ezlH8=
