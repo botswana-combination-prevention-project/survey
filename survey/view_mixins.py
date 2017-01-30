@@ -18,8 +18,6 @@ class SurveyViewMixin:
         if self.survey_schedule_object:
             kwargs['survey_schedule'] = self.survey_schedule_object.field_value
             kwargs['survey_schedule_object'] = self.survey_schedule_object
-
-        if self.survey_schedule_object:
             self.survey_schedules = site_surveys.get_survey_schedules(
                 group_name=self.survey_schedule_object.group_name)
             kwargs['survey_schedules'] = self.survey_schedules
@@ -45,8 +43,10 @@ class SurveyViewMixin:
         return survey_object
 
     def get_survey_schedule_object(self, **kwargs):
-        current_survey_schedule = django_apps.get_app_config('survey').current_survey_schedule
-        survey_schedule = kwargs.get('survey_schedule', current_survey_schedule)
+        current_survey_schedule = django_apps.get_app_config(
+            'survey').current_survey_schedule
+        survey_schedule = kwargs.get(
+            'survey_schedule', current_survey_schedule)
         survey_schedule_object = site_surveys.get_survey_schedule_from_field_value(
             survey_schedule)
         return survey_schedule_object
