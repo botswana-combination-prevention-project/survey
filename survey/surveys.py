@@ -62,12 +62,9 @@ annual_2 = Survey(
     full_enrollment_datetime=(get_utcnow() - relativedelta(years=2))
 )
 
+
 survey_one.add_survey(baseline, annual_1, annual_2)
 
-# SurveySchedule(name='bcpp-year-2')
-# SurveySchedule(name='bcpp-year-3')
-
-#if 'test' in sys.argv:
 site_surveys.register(survey_one)
 site_surveys.register(survey_two)
 site_surveys.register(survey_three)

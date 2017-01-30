@@ -39,5 +39,3 @@ class SurveyDateError(Exception):
 
 class SurveyMapAreaError(Exception):
     pass
-
-

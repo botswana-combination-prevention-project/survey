@@ -28,7 +28,8 @@ class TestSurvey(SurveyMixin, TestCase):
                 start=(get_utcnow() - relativedelta(years=1)),
                 end=get_utcnow())
         except SurveyScheduleError as e:
-            self.fail('SurveyScheduleError unexpectedly raised. Got {}'.format(e))
+            self.fail(
+                'SurveyScheduleError unexpectedly raised. Got {}'.format(e))
 
     def test_schedule_bad_dates(self):
         try:
@@ -41,17 +42,22 @@ class TestSurvey(SurveyMixin, TestCase):
             pass
 
     def test_survey_schedule_name_is_unique(self):
-        
+
+        survey_schedules = []
         for n in range(1, 4):
             survey_schedule = SurveySchedule(
                 name='survey-10',
                 group_name='ESS',
                 start=(get_utcnow() - relativedelta(years=5 + n)),
                 end=(get_utcnow() - relativedelta(years=4 + n)))
+            survey_schedules.append(survey_schedule)
             if n == 1:
                 site_surveys.register(survey_schedule)
             else:
-                self.assertRaises(AlreadyRegistered, site_surveys.register, survey_schedule)
+                self.assertRaises(
+                    AlreadyRegistered, site_surveys.register, survey_schedule)
+        for survey_schedule in survey_schedules:
+            site_surveys.unregister(survey_schedule)
 
     def test_survey_schedule_date_is_unique(self):
         survey_schedule = SurveySchedule(
@@ -59,21 +65,26 @@ class TestSurvey(SurveyMixin, TestCase):
             start=(get_utcnow() - relativedelta(years=5)),
             end=(get_utcnow() - relativedelta(years=4)))
         site_surveys.register(survey_schedule)
-        self.assertRaises(AlreadyRegistered, site_surveys.register, survey_schedule)
+        self.assertRaises(
+            AlreadyRegistered, site_surveys.register, survey_schedule)
+        site_surveys.unregister(survey_schedule)
 
     def test_get_survey_schedules_by_group_name(self):
-        schedules = []
+        survey_schedules = []
         for n in range(1, 4):
             survey_schedule = SurveySchedule(
                 name='survey-1{}'.format(n),
                 group_name='ESS',
                 start=(get_utcnow() - relativedelta(years=5 + n)),
                 end=(get_utcnow() - relativedelta(years=4 + n)))
-            schedules.append(survey_schedule)
+            survey_schedules.append(survey_schedule)
             site_surveys.register(survey_schedule)
-        schedules.sort(key=lambda o: o.start)
-        self.assertEqual(len(schedules), 3)
-        self.assertEqual(site_surveys.get_survey_schedules('ESS'), schedules)
+        survey_schedules.sort(key=lambda o: o.start)
+        self.assertEqual(len(survey_schedules), 3)
+        self.assertEqual(
+            site_surveys.get_survey_schedules('ESS'), survey_schedules)
+        for survey_schedule in survey_schedules:
+            site_surveys.unregister(survey_schedule)
 
     def test_create_survey(self):
         try:
@@ -134,7 +145,8 @@ class TestSurvey(SurveyMixin, TestCase):
             end=end,
             full_enrollment_datetime=end - relativedelta(weeks=1)
         )
-        self.assertRaises(AddSurveyDateError, survey_schedule.add_survey, survey)
+        self.assertRaises(
+            AddSurveyDateError, survey_schedule.add_survey, survey)
 
     def test_add_survey_with_bad_dates2(self):
         survey_schedule = self.make_survey_schedule()
@@ -146,20 +158,24 @@ class TestSurvey(SurveyMixin, TestCase):
             end=bad_end,
             full_enrollment_datetime=start + relativedelta(weeks=1)
         )
-        self.assertRaises(AddSurveyDateError, survey_schedule.add_survey, survey)
+        self.assertRaises(
+            AddSurveyDateError, survey_schedule.add_survey, survey)
 
     def test_create_survey_with_map_areas(self):
-        survey_schedule = self.make_survey_schedule(map_areas=['test_community'])
+        survey_schedule = self.make_survey_schedule(
+            map_areas=['test_community'])
         self.assertEqual(survey_schedule.map_areas, ['test_community'])
 
     def test_survey_with_bad_map_area(self):
-        survey_schedule = self.make_survey_schedule(map_areas=['test_community'])
+        survey_schedule = self.make_survey_schedule(
+            map_areas=['test_community'])
         survey = Survey(
             map_area='blahblah',
             start=survey_schedule.start + relativedelta(days=1),
             end=survey_schedule.end - relativedelta(days=1),
             full_enrollment_datetime=survey_schedule.end - relativedelta(days=2))
-        self.assertRaises(AddSurveyMapAreaError, survey_schedule.add_survey, survey)
+        self.assertRaises(
+            AddSurveyMapAreaError, survey_schedule.add_survey, survey)
 
     def test_survey_without_map_areas_raises(self):
         survey_schedule = self.make_survey_schedule(map_areas=None)
@@ -180,7 +196,8 @@ class TestSurvey(SurveyMixin, TestCase):
             end=survey_schedule.end - relativedelta(days=1),
             full_enrollment_datetime=survey_schedule.end - relativedelta(days=2))
         survey_schedule.add_survey(survey)
-        self.assertEqual([survey], survey_schedule.get_surveys(map_area='test_community'))
+        self.assertEqual(
+            [survey], survey_schedule.get_surveys(map_area='test_community'))
 
     def test_get_survey_by_reference_datetime(self):
         survey_schedule = self.make_survey_schedule()
@@ -246,14 +263,16 @@ class TestSurveyOrder(SurveyMixin, TestCase):
             S('test_survey.year-1.survey3.test_community')]
 
     def test_surveys_always_ordered(self):
-        self.survey_schedule.add_survey(self.survey3, self.survey1, self.survey2)
+        self.survey_schedule.add_survey(
+            self.survey3, self.survey1, self.survey2)
         surveys = self.survey_schedule.surveys
         self.assertEqual(surveys[0], self.survey1)
         self.assertEqual(surveys[1], self.survey2)
         self.assertEqual(surveys[2], self.survey3)
 
     def test_get_previous_survey(self):
-        self.survey_schedule.add_survey(self.survey3, self.survey1, self.survey2)
+        self.survey_schedule.add_survey(
+            self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
         site_surveys.register_current(*self.current_surveys)
         surveys = site_surveys.surveys
@@ -262,7 +281,8 @@ class TestSurveyOrder(SurveyMixin, TestCase):
         self.assertEqual(surveys[2].previous, self.survey2)
 
     def test_get_next_survey(self):
-        self.survey_schedule.add_survey(self.survey3, self.survey1, self.survey2)
+        self.survey_schedule.add_survey(
+            self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
         site_surveys.register_current(*self.current_surveys)
         surveys = site_surveys.surveys
@@ -271,14 +291,16 @@ class TestSurveyOrder(SurveyMixin, TestCase):
         self.assertEqual(surveys[2].next, None)
 
     def test_register_current(self):
-        self.survey_schedule.add_survey(self.survey3, self.survey1, self.survey2)
+        self.survey_schedule.add_survey(
+            self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
         site_surveys.register_current(*self.current_surveys)
         self.assertEqual(len(site_surveys.current_surveys), 3)
 
     def test_current_has_flag_set(self):
         """Asserts survey instance is set, from current surveys."""
-        self.survey_schedule.add_survey(self.survey3, self.survey1, self.survey2)
+        self.survey_schedule.add_survey(
+            self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
         site_surveys.register_current(*self.current_surveys)
         for survey in site_surveys.current_surveys:
@@ -286,7 +308,8 @@ class TestSurveyOrder(SurveyMixin, TestCase):
 
     def test_current_has_flag_set2(self):
         """Asserts survey instance is set, in the surveys register."""
-        self.survey_schedule.add_survey(self.survey3, self.survey1, self.survey2)
+        self.survey_schedule.add_survey(
+            self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
         site_surveys.register_current(*self.current_surveys)
         for survey in site_surveys.surveys:
@@ -310,7 +333,8 @@ class TestSurveyParser(TestCase):
         self.assertEqual(s.survey_schedule_name, 'year-1')
         self.assertEqual(s.map_area, 'test_community')
         self.assertEqual(s.survey_field_value, None)
-        self.assertEqual(s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
+        self.assertEqual(
+            s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
         self.assertEqual(s.field_value, 'bcpp_survey.year-1.test_community')
 
     def test_s_parse_survey_schedule_with_survey(self):
@@ -320,8 +344,10 @@ class TestSurveyParser(TestCase):
         self.assertEqual(s.survey_schedule_name, 'year-1')
         self.assertEqual(s.survey_name, 'ess')
         self.assertEqual(s.map_area, 'test_community')
-        self.assertEqual(s.survey_field_value, 'bcpp_survey.year-1.ess.test_community')
-        self.assertEqual(s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
+        self.assertEqual(
+            s.survey_field_value, 'bcpp_survey.year-1.ess.test_community')
+        self.assertEqual(
+            s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
         self.assertEqual(s.field_value, 'bcpp_survey.year-1.test_community')
 
     def test_s_parse_survey(self):
@@ -331,9 +357,12 @@ class TestSurveyParser(TestCase):
         self.assertEqual(s.survey_schedule_name, 'year-1')
         self.assertEqual(s.survey_name, 'ess')
         self.assertEqual(s.map_area, 'test_community')
-        self.assertEqual(s.survey_field_value, 'bcpp_survey.year-1.ess.test_community')
-        self.assertEqual(s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
-        self.assertEqual(s.field_value, 'bcpp_survey.year-1.ess.test_community')
+        self.assertEqual(
+            s.survey_field_value, 'bcpp_survey.year-1.ess.test_community')
+        self.assertEqual(
+            s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
+        self.assertEqual(
+            s.field_value, 'bcpp_survey.year-1.ess.test_community')
 
 
 @tag('erik')
@@ -352,6 +381,7 @@ class TestSiteSurvey(SurveyMixin, TestCase):
         field_value = app_config.current_surveys[0].field_value
         self.assertIsNotNone(field_value)
         s = S(field_value)
-        survey_schedule = site_surveys.get_survey_schedule_from_field_value(field_value)
+        survey_schedule = site_surveys.get_survey_schedule_from_field_value(
+            field_value)
         self.assertEqual(
             survey_schedule.field_value, s.survey_schedule_field_value)
