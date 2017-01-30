@@ -18,7 +18,6 @@ from ..survey_schedule import SurveySchedule
 from .mixins import SurveyMixin
 
 
-@tag('erik')
 class TestSurvey(SurveyMixin, TestCase):
 
     def test_schedule_good_dates(self):
@@ -369,7 +368,6 @@ class TestSurveyParser(TestCase):
             s.field_value, 'bcpp_survey.year-1.ess.test_community')
 
 
-@tag('erik')
 class TestSiteSurvey(SurveyMixin, TestCase):
 
     def test_get_survey_by_field_value(self):
