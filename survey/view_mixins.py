@@ -1,7 +1,6 @@
 from django.apps import apps as django_apps
 
 from .site_surveys import site_surveys
-from pprint import pprint
 
 
 class SurveyViewMixin:
@@ -19,7 +18,6 @@ class SurveyViewMixin:
             context.update(
                 survey=self.survey_object.field_value,
                 survey_object=self.survey_object)
-        print('SurveyViewMixin')
         return context
 
     @property
