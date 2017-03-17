@@ -222,12 +222,17 @@ class SiteSurveys:
             for survey in survey_schedule.surveys:
                 if survey.name == s.survey_name and survey.map_area == s.map_area:
                     return survey
-            raise SurveyError(
-                'Invalid survey name for survey_schedule \'{}\'. Got \'{}\'. '
-                'Expected one of {}'.format(
-                    survey_schedule.field_value,
-                    s.field_value,
-                    [s.field_value for s in survey_schedule.surveys]))
+            if not django_apps.get_app_config('edc_device').is_client:
+                for survey in survey_schedule.surveys:
+                    if survey.name == s.survey_name:
+                        return survey
+            else:
+                raise SurveyError(
+                    'Invalid survey name for survey_schedule \'{}\'. Got \'{}\'. '
+                    'Expected one of {}'.format(
+                        survey_schedule.field_value,
+                        s.field_value,
+                        [s.field_value for s in survey_schedule.surveys]))
         return None
 
     @property
