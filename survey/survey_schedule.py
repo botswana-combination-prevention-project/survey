@@ -127,7 +127,7 @@ class SurveySchedule(MapAreaMixin, DateMixin):
                 if survey.map_area not in self.map_areas:
                     raise AddSurveyMapAreaError(
                         'Unable to add survey to schedule. Invalid '
-                        'map_area for schedule {}. Got {}.'.format(
+                        'map_area for schedule \'{}\'. Got \'{}\'.'.format(
                             self.name, survey.map_area))
             survey.survey_schedule = self
             self.registry.append(survey)

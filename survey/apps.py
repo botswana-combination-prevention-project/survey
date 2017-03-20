@@ -6,9 +6,9 @@ from django.apps import AppConfig as DjangoApponfig
 from django.conf import settings
 from django.core.management.color import color_style
 
+from .exceptions import SurveyError
 from .site_surveys import site_surveys
 from .sparser import S
-from survey.exceptions import SurveyError
 
 style = color_style()
 
@@ -24,7 +24,21 @@ class AppConfig(DjangoApponfig):
         S('test_survey.year-1.annual-1.test_community'),
         S('test_survey.year-1.annual-2.test_community')]
 
-    current_survey_schedule = None
+    @property
+    def current_survey_schedule(self):
+        try:
+            survey_group = settings.SURVEY_GROUP_NAME
+        except AttributeError:
+            survey_group = 'test_survey'
+        try:
+            survey_schedule = settings.SURVEY_SCHEDULE_NAME
+        except AttributeError:
+            survey_schedule = 'year-1'
+        try:
+            map_area = settings.CURRENT_MAP_AREA
+        except AttributeError:
+            map_area = 'test_community'
+        return '{}.{}.{}'.format(survey_group, survey_schedule, map_area)
 
     def ready(self):
         sys.stdout.write('Loading {} ...\n'.format(self.verbose_name))
@@ -49,7 +63,8 @@ class AppConfig(DjangoApponfig):
                 not in site_surveys.get_survey_schedule_field_values()):
             raise SurveyError(
                 'Invalid current survey schedule specified. See AppConfig. '
-                'Got {}. Expected one of {}.'.format(
+                'Got \'{}\'. Expected one of {}.'.format(
+                    self.current_survey_schedule,
                     site_surveys.get_survey_schedule_field_values()))
         else:
             sys.stdout.write(
