@@ -1,12 +1,13 @@
 from django.apps import apps as django_apps
 
-from .site_surveys import site_surveys
+from ..site_surveys import site_surveys
 
 
 class SurveyViewMixin:
 
     def get_context_data(self, **kwargs):
-        """Add survey and survey_schedule objects to the context."""
+        """Add survey and survey_schedule objects to the context.
+        """
         context = super().get_context_data(**kwargs)
         if self.survey_schedule_object:
             context.update(
