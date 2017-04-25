@@ -14,7 +14,7 @@ from .sparser import S
 
 
 class SiteSurveys:
-    """ Main controller of :class:`SurveySchedule` objects.
+    """Main controller of :class:`SurveySchedule` objects.
 
     A survey_schedule contains surveys
     """

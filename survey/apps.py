@@ -38,10 +38,10 @@ class AppConfig(DjangoApponfig):
             map_area = settings.CURRENT_MAP_AREA
         except AttributeError:
             map_area = 'test_community'
-        return '{}.{}.{}'.format(survey_group, survey_schedule, map_area)
+        return f'{survey_group}.{survey_schedule}.{map_area}'
 
     def ready(self):
-        sys.stdout.write('Loading {} ...\n'.format(self.verbose_name))
+        sys.stdout.write(f'Loading {self.verbose_name} ...\n')
         site_surveys.autodiscover()
         if site_surveys.loaded:
             try:
@@ -49,8 +49,7 @@ class AppConfig(DjangoApponfig):
                 self.current_surveys = settings.CURRENT_SURVEYS
             except AttributeError as e:
                 if self.use_settings:
-                    raise AttributeError(
-                        '{} See survey.AppConfig.'.format(str(e)))
+                    raise AttributeError(f'{str(e)} See survey.AppConfig.')
             else:
                 if not self.use_settings:
                     sys.stdout.write(style.ERROR(
@@ -62,20 +61,19 @@ class AppConfig(DjangoApponfig):
                 and self.current_survey_schedule
                 not in site_surveys.get_survey_schedule_field_values()):
             raise SurveyError(
-                'Invalid current survey schedule specified. See AppConfig. '
-                'Got \'{}\'. Expected one of {}.'.format(
-                    self.current_survey_schedule,
-                    site_surveys.get_survey_schedule_field_values()))
+                f'Invalid current survey schedule specified. See AppConfig. '
+                'Got \'{self.current_survey_schedule}\'. Expected one '
+                'of {site_surveys.get_survey_schedule_field_values()}.')
         else:
+            current_survey_schedule = self.current_survey_schedule or '<not set>'
             sys.stdout.write(
-                ' * current survey schedule : {}\n'.format(
-                    self.current_survey_schedule or '<not set>'))
+                f' * current survey schedule : {current_survey_schedule}\n')
         sys.stdout.write(' * detected survey schedules are:\n')
         for field_value in site_surveys.get_survey_schedule_field_values():
-            sys.stdout.write('   - {}\n'.format(field_value))
+            sys.stdout.write(f'   - {field_value}\n')
         sys.stdout.write(' * current surveys are:\n')
         for survey in site_surveys.current_surveys:
-            sys.stdout.write('   - {}\n'.format(survey.field_value))
-        sys.stdout.write(' * detected map_areas: \'{}\'\n'.format(
-            ', '.join(site_surveys.current_map_areas)))
-        sys.stdout.write(' Done loading {}.\n'.format(self.verbose_name))
+            sys.stdout.write(f'   - {survey.field_value}\n')
+        current_map_areas = ', '.join(site_surveys.current_map_areas)
+        sys.stdout.write(f' * detected map_areas: \'{current_map_areas}\'\n')
+        sys.stdout.write(f' Done loading {self.verbose_name}.\n')
