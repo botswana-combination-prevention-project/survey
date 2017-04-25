@@ -1,9 +1,9 @@
 # coding=utf-8
 import arrow
 
-from .mixins import MapAreaMixin, DateMixin
 from .exceptions import (
     AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError)
+from .mixins import MapAreaMixin, DateMixin
 
 
 class SurveySchedule(MapAreaMixin, DateMixin):
