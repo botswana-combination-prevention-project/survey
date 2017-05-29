@@ -26,6 +26,7 @@ class SiteSurveys:
         self.current_surveys = []
         self._backup_registry = []
         self._backup_current_surveys = []
+        self.constants = {}
 
     @property
     def registry(self):
