@@ -55,14 +55,16 @@ class Survey(MapAreaMixin, DateMixin):
     @property
     def long_name(self):
         """Returns the survey string stored in model instances with
-        the `survey` field, e.g. household_structure."""
+        the `survey` field, e.g. household_structure.
+        """
         return '{}.{}.{}.{}'.format(
             self.survey_schedule.group_name,
             self.survey_schedule.name, self.name, self.map_area)
 
     @property
     def field_value(self):
-        """Convenience method for models."""
+        """Convenience method for models.
+        """
         return self.long_name
 
     @property
@@ -75,13 +77,15 @@ class Survey(MapAreaMixin, DateMixin):
 
     @property
     def previous(self):
-        """Returns the previous current survey or None."""
+        """Returns the previous current survey or None.
+        """
         from .site_surveys import site_surveys
         return site_surveys.previous_survey(self)
 
     @property
     def next(self):
-        """Returns the next current survey or None."""
+        """Returns the next current survey or None.
+        """
         from .site_surveys import site_surveys
         return site_surveys.next_survey(self)
 
