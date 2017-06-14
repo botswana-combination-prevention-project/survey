@@ -1,5 +1,3 @@
-from django.conf import settings
-
 from ..exceptions import SurveyMapAreaError
 
 
@@ -17,16 +15,9 @@ class MapAreaMixin:
         return ' '.join(self.map_area.split('_')).title()
 
     def get_map_area(self):
-        return self._map_area_from_settings()
-
-    def _map_area_from_settings(self):
-        """Returns a map area from settings or raises for when the map
-        area is not provided."""
-        try:
-            return settings.CURRENT_MAP_AREA
-        except AttributeError:
-            raise SurveyMapAreaError('Unable to determine the current map area.')
-        return None
+        """Returns a map area from AppConfig."""
+        from edc_map.site_mappers import site_mappers
+        return site_mappers.current_map_area
 
     def validate_map_area(self):
 
@@ -42,11 +33,10 @@ class MapAreaMixin:
                     'Invalid {} map area. {} is not a '
                     'valid map area.'.format(self.__class__.__name__, self.map_area))
 
-            if (self._map_area_from_settings() and
-                    self._map_area_from_settings() != self.map_area):
+            if self.get_map_area() != self.map_area:
                 raise SurveyMapAreaError(
                     'Invalid {} map area. Map area is specified twice. '
                     'Got \'{}\' from settings and \'{}\' from class.'.format(
                         self.__class__.__name__,
-                        self._map_area_from_settings(),
+                        self.get_map_area(),
                         self.map_area))

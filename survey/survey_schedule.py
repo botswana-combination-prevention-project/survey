@@ -40,16 +40,17 @@ class SurveySchedule(MapAreaMixin, DateMixin):
 
     @property
     def short_name(self):
-        return '{}.{}'.format(self.group_name, self.name)
+        return f'{self.group_name}.{self.name}'
 
     @property
     def surveys(self):
-        """Returns all surveys in the schedule."""
+        """Returns all surveys in the schedule.
+        """
         return self.registry
 
     @property
     def field_value(self):
-        return '{}.{}.{}'.format(self.group_name, self.name, self.map_area)
+        return f'{self.group_name}.{self.name}.{self.map_area}'
 
     @property
     def current_surveys(self):

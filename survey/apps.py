@@ -6,7 +6,7 @@ from django.apps import AppConfig as DjangoApponfig
 from django.conf import settings
 from django.core.management.color import color_style
 
-from .exceptions import SurveyError
+from .exceptions import SurveyError, SurveyMapAreaError
 from .site_surveys import site_surveys
 from .sparser import S
 
@@ -29,15 +29,18 @@ class AppConfig(DjangoApponfig):
         try:
             survey_group = settings.SURVEY_GROUP_NAME
         except AttributeError:
-            survey_group = 'test_survey'
+            raise SurveyMapAreaError(
+                'Unable to determine the survey group name. See setting.SURVEY_GROUP_NAME')
         try:
             survey_schedule = settings.SURVEY_SCHEDULE_NAME
         except AttributeError:
-            survey_schedule = 'year-1'
+            raise SurveyMapAreaError(
+                'Unable to determine the survey schedule name. See setting.SURVEY_SCHEDULE_NAME')
         try:
             map_area = settings.CURRENT_MAP_AREA
         except AttributeError:
-            map_area = 'test_community'
+            raise SurveyMapAreaError(
+                'Unable to determine the current map area. See setting.CURRENT_MAP_AREA')
         return f'{survey_group}.{survey_schedule}.{map_area}'
 
     def ready(self):
@@ -49,7 +52,9 @@ class AppConfig(DjangoApponfig):
                 self.current_surveys = settings.CURRENT_SURVEYS
             except AttributeError as e:
                 if self.use_settings:
-                    raise AttributeError(f'{str(e)} See survey.AppConfig.')
+                    raise AttributeError(
+                        f'{e} See survey.AppConfig. You are seeing this '
+                        f'exception because \'AppConfig.use_settings\'=True')
             else:
                 if not self.use_settings:
                     sys.stdout.write(style.ERROR(
@@ -62,8 +67,8 @@ class AppConfig(DjangoApponfig):
                 not in site_surveys.get_survey_schedule_field_values()):
             raise SurveyError(
                 f'Invalid current survey schedule specified. See AppConfig. '
-                'Got \'{self.current_survey_schedule}\'. Expected one '
-                'of {site_surveys.get_survey_schedule_field_values()}.')
+                f'Got \'{self.current_survey_schedule}\'. Expected one '
+                f'of {site_surveys.get_survey_schedule_field_values()}.')
         else:
             current_survey_schedule = self.current_survey_schedule or '<not set>'
             sys.stdout.write(

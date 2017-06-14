@@ -69,5 +69,5 @@ if 'test' in sys.argv:
     survey_one.add_survey(baseline, annual_1, annual_2)
 
     site_surveys.register(survey_one)
-    site_surveys.register(survey_two)
-    site_surveys.register(survey_three)
+    # site_surveys.register(survey_two)
+    # site_surveys.register(survey_three)

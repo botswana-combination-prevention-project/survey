@@ -7,16 +7,27 @@ from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
 
 from .exceptions import (
-    SurveyScheduleError, RegistryNotLoaded, AlreadyRegistered,
-    SurveyError, AddSurveyDateError,
+    SurveyScheduleError, AddSurveyDateError,
     AddSurveyMapAreaError, AddSurveyOverlapError, AddSurveyNameError)
 from .sparser import S
+
+
+class SiteSurveysRegistryNotLoaded(Exception):
+    pass
+
+
+class SiteSurveysError(Exception):
+    pass
+
+
+class SiteSurveysAlreadyRegistered(Exception):
+    pass
 
 
 class SiteSurveys:
     """Main controller of :class:`SurveySchedule` objects.
 
-    A survey_schedule contains surveys
+    A survey_schedule contains surveys.
     """
 
     def __init__(self):
@@ -31,7 +42,7 @@ class SiteSurveys:
     @property
     def registry(self):
         if not self.loaded:
-            raise RegistryNotLoaded(
+            raise SiteSurveysRegistryNotLoaded(
                 'Registry not loaded. Is AppConfig for \'survey\' '
                 'declared in settings?.')
         return self._registry
@@ -61,15 +72,18 @@ class SiteSurveys:
 
     def register(self, survey_schedule):
         self.loaded = True
-        if survey_schedule.name in [
+        if not survey_schedule.surveys:
+            raise SiteSurveysError(
+                f'Not registering survey schedule. Survey schedule has no surveys. '
+                f'Got {repr(survey_schedule)}')
+        elif survey_schedule.name in [
                 survey_schedule.name for survey_schedule in self.registry]:
-            raise AlreadyRegistered(
-                'Survey Schedule {} is already registered.'.format(
-                    survey_schedule))
+            raise SiteSurveysAlreadyRegistered(
+                f'Survey Schedule {repr(survey_schedule)} is already registered.')
         for schedule in self.get_survey_schedules(
                 group_name=survey_schedule.group_name):
             if survey_schedule.start == schedule.start:
-                raise AlreadyRegistered(
+                raise SiteSurveysAlreadyRegistered(
                     'Survey Schedule {} is already registered using '
                     'start date {}. Unable to registered {}.'.format(
                         schedule.name,
@@ -77,34 +91,33 @@ class SiteSurveys:
                         survey_schedule.name))
         self.registry.append(survey_schedule)
 
-    def register_current(self, *slist):
+    def register_current(self, *sparsers):
+        """Registers the current surveys from a list of sparser.S objects.
+        """
         if not self.loaded:
-            raise RegistryNotLoaded(
+            raise SiteSurveysRegistryNotLoaded(
                 'Registry not loaded. Register ALL surveys before '
                 'registering the current surveys.')
-        for s in slist:
+        for s in sparsers:
             if not self.get_survey_schedules(group_name=s.group_name):
                 try:
                     survey_schedule_group_names = self.get_survey_schedule_group_names()
-                    raise SurveyError(
-                        'Invalid group name. Got \'{}\'. Expected one of {}. '
-                        'See survey.apps.AppConfig'.format(
-                            s.group_name, survey_schedule_group_names))
+                    raise SiteSurveysError(
+                        f'Invalid group name. Got \'{s.group_name}\'. '
+                        f'Expected one of {survey_schedule_group_names}. '
+                        'See survey.apps.AppConfig')
                 except AttributeError as e:
-                    raise SurveyError(
+                    raise SiteSurveysError(
                         'Have you installed any surveys?. '
                         'See survey.apps.AppConfig '
-                        'and surveys.py. Got {}'.format(
-                            str(e)))
-        if not self.get_surveys(*slist):
-            raise SurveyError(
-                'Current surveys listed in AppConfig do not correspond '
-                'with any surveys in surveys.py. Got: \n *{}\n Expected one '
-                'of: \n *{}\n See survey.apps.AppConfig and surveys.py'.format(
-                    ',\n *'.join([s.name for s in slist]),
-                    ',\n *'.join([s.field_value for s in self.surveys])))
+                        f'and surveys.py. Got {e}')
+        if not self.get_surveys(*sparsers):
+            raise SiteSurveysError(
+                f'Current surveys listed in AppConfig do not correspond '
+                f'with any surveys in surveys.py. Got: \n *{sparsers}\n Expected one '
+                f'of: \n *{self.surveys}\n See survey.apps.AppConfig and surveys.py')
         for survey in self.surveys:
-            if survey.long_name in [s.name for s in slist]:
+            if survey.long_name in [s.name for s in sparsers]:
                 survey.current = True
                 self.current_surveys.append(survey)
         self.current_surveys.sort(key=lambda x: x.start)
@@ -228,7 +241,7 @@ class SiteSurveys:
                     if survey.name == s.survey_name:
                         return survey
             else:
-                raise SurveyError(
+                raise SiteSurveysError(
                     'Invalid survey name for survey_schedule \'{}\'. Got \'{}\'. '
                     'Expected one of {}'.format(
                         survey_schedule.field_value,
@@ -312,8 +325,8 @@ class SiteSurveys:
                         ' * registered surveys from application '
                         '\'{}\'\n'.format(app))
                 except (SurveyScheduleError,
-                        AlreadyRegistered,
-                        SurveyError,
+                        SiteSurveysAlreadyRegistered,
+                        SiteSurveysError,
                         AddSurveyDateError,
                         AddSurveyMapAreaError,
                         AddSurveyNameError,

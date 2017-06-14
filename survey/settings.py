@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-
+import sys
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'edc_device.apps.AppConfig',
     'edc_protocol.apps.AppConfig',
     'edc_identifier.apps.AppConfig',
+    'edc_map.apps.AppConfig',
     'survey.apps.AppConfig'
 ]
 
@@ -126,4 +127,30 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
+if 'test' in sys.argv:
+    MIGRATION_MODULES = {
+        "django_crypto_fields": None,
+        "edc_appointment": None,
+        "edc_consent": None,
+        "edc_identifier": None,
+        'admin': None,
+        "auth": None,
+        'contenttypes': None,
+        'sessions': None,
+    }
+if 'test' in sys.argv:
+    PASSWORD_HASHERS = ('django_plainpasswordhasher.PlainPasswordHasher', )
+if 'test' in sys.argv:
+    DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# Settings attributes for full "survey schedule name". Used to validate the
+# survey schedules and to determine the "current" survey schedule.
+# e.g. 'test_survey.year-1.test_community'
+SURVEY_GROUP_NAME = 'test_survey'
+SURVEY_SCHEDULE_NAME = 'year-1'
 CURRENT_MAP_AREA = 'test_community'

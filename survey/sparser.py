@@ -8,29 +8,34 @@ class S:
     """A simple class to parse survey / survey schedule name.
 
     Makes no attempt to validate the values."""
+
     def __init__(self, s, survey_name=None, inactive=None, ):
+        self._s = s
         if re.match(survey_pattern, s):
             try:
                 (self.group_name, self.survey_schedule_name,
                  self.survey_name, self.map_area) = s.split('.')
             except ValueError as e:
-                raise SurveyError('{} Got {}'.format(str(e), s))
+                raise SurveyError(f'{e} Got {s}')
         elif re.match(survey_schedule_pattern, s):
             try:
-                self.group_name, self.survey_schedule_name, self.map_area = s.split('.')
+                self.group_name, self.survey_schedule_name, self.map_area = s.split(
+                    '.')
             except ValueError as e:
                 raise SurveyError('{} Got {}'.format(str(e), s))
             else:
                 self.survey_name = survey_name
         else:
-            raise SurveyError('Invalid survey name format. Got {}.'.format(s))
+            raise SurveyError(f'Invalid survey name format. Got {s}.')
         self.field_value = s
         self.inactive = inactive
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}(\'{self._s}\')'
+
     def __str__(self):
-        return '{} ({})'.format(
-            self.field_value,
-            'survey_schedule' if self.survey_schedule_field_value else 'survey')
+        name = 'survey_schedule' if self.survey_schedule_field_value else 'survey'
+        return f'{self.field_value} ({name})'
 
     @property
     def name(self):
@@ -47,5 +52,4 @@ class S:
 
     @property
     def survey_schedule_field_value(self):
-        return '{}.{}.{}'.format(
-            self.group_name, self.survey_schedule_name, self.map_area)
+        return f'{self.group_name}.{self.survey_schedule_name}.{self.map_area}'
