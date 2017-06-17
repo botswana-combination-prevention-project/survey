@@ -3,7 +3,8 @@ from django.test import TestCase, tag
 from dateutil.relativedelta import relativedelta
 from edc_base.utils import get_utcnow
 
-from ..site_surveys import SiteSurveys, SiteSurveysRegistryNotLoaded, SiteSurveysAlreadyRegistered
+from ..site_surveys import SiteSurveys, SiteSurveysRegistryNotLoaded
+from ..site_surveys import SiteSurveysAlreadyRegistered
 from ..site_surveys import site_surveys, SiteSurveysError
 from ..sparser import S
 from ..survey import Survey
@@ -120,7 +121,8 @@ class TestSiteSurveys(TestCase):
                 site_surveys.register(survey_schedule)
             else:
                 self.assertRaises(
-                    SiteSurveysAlreadyRegistered, site_surveys.register, survey_schedule)
+                    SiteSurveysAlreadyRegistered,
+                    site_surveys.register, survey_schedule)
         for survey_schedule in survey_schedules:
             site_surveys.unregister(survey_schedule)
 

@@ -30,17 +30,20 @@ class AppConfig(DjangoApponfig):
             survey_group = settings.SURVEY_GROUP_NAME
         except AttributeError:
             raise SurveyMapAreaError(
-                'Unable to determine the survey group name. See setting.SURVEY_GROUP_NAME')
+                'Unable to determine the survey group name. '
+                'See setting.SURVEY_GROUP_NAME')
         try:
             survey_schedule = settings.SURVEY_SCHEDULE_NAME
         except AttributeError:
             raise SurveyMapAreaError(
-                'Unable to determine the survey schedule name. See setting.SURVEY_SCHEDULE_NAME')
+                'Unable to determine the survey schedule name. '
+                'See setting.SURVEY_SCHEDULE_NAME')
         try:
             map_area = settings.CURRENT_MAP_AREA
         except AttributeError:
             raise SurveyMapAreaError(
-                'Unable to determine the current map area. See setting.CURRENT_MAP_AREA')
+                'Unable to determine the current map area. '
+                'See setting.CURRENT_MAP_AREA')
         return f'{survey_group}.{survey_schedule}.{map_area}'
 
     def ready(self):
