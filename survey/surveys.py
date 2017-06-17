@@ -1,16 +1,22 @@
 # coding=utf-8
 
+import os
 import sys
 
 if 'test' in sys.argv:
 
     from dateutil.relativedelta import relativedelta
+    from django.core.management.color import color_style
 
     from edc_base.utils import get_utcnow
 
     from .site_surveys import site_surveys
     from .survey import Survey
     from .survey_schedule import SurveySchedule
+
+    style = color_style()
+    sys.stdout.write(style.NOTICE(
+        f' * loading test surveys from {os.path.abspath(__file__)}\n'))
 
     current_map_area = 'test_community'
     map_areas = ['test_community']
