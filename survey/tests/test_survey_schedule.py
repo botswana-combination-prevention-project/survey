@@ -10,10 +10,8 @@ from ..exceptions import SurveyDateError
 from ..exceptions import SurveyScheduleError
 from ..survey_schedule import SurveySchedule
 
-from .mixins import SurveyMixin
 
-
-class TestSurvey(SurveyMixin, TestCase):
+class TestSurvey(TestCase):
 
     def test_schedule_good_dates(self):
         try:

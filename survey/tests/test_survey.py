@@ -9,11 +9,12 @@ from edc_base.utils import get_utcnow
 from ..exceptions import AddSurveyMapAreaError, SurveyDateError
 from ..exceptions import SurveyError, AddSurveyDateError
 from ..survey import Survey
+from .survey_test_helper import SurveyTestHelper
 
-from .mixins import SurveyMixin
 
+class TestSurvey(TestCase):
 
-class TestSurvey(SurveyMixin, TestCase):
+    survey_helper = SurveyTestHelper()
 
     def test_create_survey(self):
         try:
@@ -55,7 +56,7 @@ class TestSurvey(SurveyMixin, TestCase):
         )
 
     def test_add_survey_to_schedule(self):
-        survey_schedule = self.make_survey_schedule()
+        survey_schedule = self.survey_helper.make_survey_schedule()
         survey = Survey(
             map_area='test_community',
             start=(get_utcnow() - relativedelta(years=4)),
@@ -65,7 +66,7 @@ class TestSurvey(SurveyMixin, TestCase):
         survey_schedule.add_survey(survey)
 
     def test_add_survey_with_bad_dates(self):
-        survey_schedule = self.make_survey_schedule()
+        survey_schedule = self.survey_helper.make_survey_schedule()
         bad_start = survey_schedule.start - relativedelta(years=1)
         end = survey_schedule.end
         survey = Survey(
@@ -78,7 +79,7 @@ class TestSurvey(SurveyMixin, TestCase):
             AddSurveyDateError, survey_schedule.add_survey, survey)
 
     def test_add_survey_with_bad_dates2(self):
-        survey_schedule = self.make_survey_schedule()
+        survey_schedule = self.survey_helper.make_survey_schedule()
         start = survey_schedule.start
         bad_end = survey_schedule.end + relativedelta(years=1)
         survey = Survey(
@@ -91,12 +92,12 @@ class TestSurvey(SurveyMixin, TestCase):
             AddSurveyDateError, survey_schedule.add_survey, survey)
 
     def test_create_survey_with_map_areas(self):
-        survey_schedule = self.make_survey_schedule(
+        survey_schedule = self.survey_helper.make_survey_schedule(
             map_areas=['test_community'])
         self.assertEqual(survey_schedule.map_areas, ['test_community'])
 
     def test_survey_with_bad_map_area(self):
-        survey_schedule = self.make_survey_schedule(
+        survey_schedule = self.survey_helper.make_survey_schedule(
             map_areas=['test_community'])
         survey = Survey(
             map_area='blahblah',
@@ -107,7 +108,8 @@ class TestSurvey(SurveyMixin, TestCase):
             AddSurveyMapAreaError, survey_schedule.add_survey, survey)
 
     def test_survey_without_map_areas_raises(self):
-        survey_schedule = self.make_survey_schedule(map_areas=None)
+        survey_schedule = self.survey_helper.make_survey_schedule(
+            map_areas=None)
         survey = Survey(
             map_area='blahblah',
             start=survey_schedule.start + relativedelta(days=1),
@@ -118,7 +120,7 @@ class TestSurvey(SurveyMixin, TestCase):
             survey_schedule.add_survey, survey)
 
     def test_get_survey_by_map_area(self):
-        survey_schedule = self.make_survey_schedule()
+        survey_schedule = self.survey_helper.make_survey_schedule()
         survey = Survey(
             map_area='test_community',
             start=survey_schedule.start + relativedelta(days=1),
@@ -129,7 +131,7 @@ class TestSurvey(SurveyMixin, TestCase):
             [survey], survey_schedule.get_surveys(map_area='test_community'))
 
     def test_get_survey_by_reference_datetime(self):
-        survey_schedule = self.make_survey_schedule()
+        survey_schedule = self.survey_helper.make_survey_schedule()
         survey1 = Survey(
             map_area='test_community',
             start=survey_schedule.start + relativedelta(days=1),
@@ -145,7 +147,7 @@ class TestSurvey(SurveyMixin, TestCase):
             reference_datetime=survey_schedule.start + relativedelta(days=2)))
 
     def test_get_survey_by_reference_datetime2(self):
-        survey_schedule = self.make_survey_schedule()
+        survey_schedule = self.survey_helper.make_survey_schedule()
         survey1 = Survey(
             map_area='test_community',
             start=survey_schedule.start + relativedelta(days=1),

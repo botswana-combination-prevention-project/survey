@@ -9,19 +9,11 @@ from ..survey_schedule import SurveySchedule
 fake = Faker()
 
 
-class SurveyTestMixinError(Exception):
+class SurveyTestHelperError(Exception):
     pass
 
 
-class SurveyTestMixin:
-
-    def setUp(self):
-        super().setUp()
-        # site_surveys.backup_registry(clear=False)
-
-    def tearDown(self):
-        super().tearDown()
-        # site_surveys.restore_registry()
+class SurveyTestHelper:
 
     def make_survey_schedule(self, group_name=None, name=None, **options):
         return SurveySchedule(
@@ -39,7 +31,7 @@ class SurveyTestMixin:
             survey_schedule = site_surveys.get_survey_schedule_from_field_value(
                 survey_schedule.field_value)
             if not survey_schedule:
-                raise SurveyTestMixinError(
+                raise SurveyTestHelperError(
                     'Invalid survey specified. Got {}. See TestCase {} '
                     'Expected one of {}'.format(
                         survey_schedule.field_value,

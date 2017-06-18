@@ -9,7 +9,7 @@ from ..site_surveys import site_surveys, SiteSurveysError
 from ..sparser import S
 from ..survey import Survey
 from ..survey_schedule import SurveySchedule
-from .survey_test_mixin import SurveyTestMixin
+from .survey_test_helper import SurveyTestHelper
 
 
 class TestSiteSurveys(TestCase):
@@ -156,7 +156,7 @@ class TestSiteSurveys(TestCase):
             site_surveys.unregister(survey_schedule)
 
 
-class TestSiteSurveys2(SurveyTestMixin, TestCase):
+class TestSiteSurveys2(TestCase):
 
     def test_get_survey_by_field_value(self):
         app_config = django_apps.get_app_config('survey')
@@ -177,13 +177,15 @@ class TestSiteSurveys2(SurveyTestMixin, TestCase):
             survey_schedule.field_value, s.survey_schedule_field_value)
 
 
-class TestSiteSurveysSurveyOrder(SurveyTestMixin, TestCase):
+class TestSiteSurveysSurveyOrder(TestCase):
+
+    survey_helper = SurveyTestHelper()
 
     def setUp(self):
-        super().setUp()
         site_surveys.backup_registry(clear=True)
 
-        self.survey_schedule = self.make_survey_schedule(name='year-1')
+        self.survey_schedule = self.survey_helper.make_survey_schedule(
+            name='year-1')
         self.survey1 = Survey(
             name='survey1',
             map_area='test_community',
