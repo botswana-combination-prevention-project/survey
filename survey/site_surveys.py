@@ -120,6 +120,7 @@ class SiteSurveys:
             if survey.long_name in [s.name for s in sparsers]:
                 survey.current = True
                 self.current_surveys.append(survey)
+        self.current_surveys = list(set(self.current_surveys))
         self.current_surveys.sort(key=lambda x: x.start)
 
     def get_survey_schedule(self, value):

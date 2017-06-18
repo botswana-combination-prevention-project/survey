@@ -1,4 +1,5 @@
 from dateutil.relativedelta import relativedelta
+from django.apps import apps as django_apps
 
 from edc_base.utils import get_utcnow
 
@@ -69,7 +70,11 @@ annual_2 = Survey(
 survey_one.add_survey(baseline, annual_1, annual_2)
 
 
-def load_test_surveys():
+def load_test_surveys(current_surveys=None):
+
+    if not current_surveys:
+        app_config = django_apps.get_app_config('survey')
+        current_surveys = app_config.current_surveys
 
     site_surveys._registry = []
     site_surveys.loaded_current = False
@@ -77,5 +82,6 @@ def load_test_surveys():
     site_surveys.current_surveys = []
 
     site_surveys.register(survey_one)
+    site_surveys.register_current(*current_surveys)
     # site_surveys.register(survey_two)
     # site_surveys.register(survey_three)
