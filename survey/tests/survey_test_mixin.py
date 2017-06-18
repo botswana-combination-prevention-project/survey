@@ -2,12 +2,15 @@ from dateutil.relativedelta import relativedelta
 from faker import Faker
 
 from edc_base.utils import get_utcnow
-from edc_base_test.exceptions import TestMixinError
 
 from ..site_surveys import site_surveys
 from ..survey_schedule import SurveySchedule
 
 fake = Faker()
+
+
+class SurveyTestMixinError(Exception):
+    pass
 
 
 class SurveyTestMixin:
@@ -36,7 +39,7 @@ class SurveyTestMixin:
             survey_schedule = site_surveys.get_survey_schedule_from_field_value(
                 survey_schedule.field_value)
             if not survey_schedule:
-                raise TestMixinError(
+                raise SurveyTestMixinError(
                     'Invalid survey specified. Got {}. See TestCase {} '
                     'Expected one of {}'.format(
                         survey_schedule.field_value,

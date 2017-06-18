@@ -1,29 +1,31 @@
-dist: trusty
-sudo: required
 language: python
+
 python:
-- 3.5.1
+- 3.6
+
 services:
 - mysql
-before_install:
-- export DISPLAY=:99.0
-- sh -e /etc/init.d/xvfb start
-- sleep 3
+
 branches:
   only:
   - develop
+
 install:
 - pip install --upgrade pip
 - pip install -r requirements.txt
 - pip install flake8
 - pip install coveralls
+
 before_script:
 - flake8 survey
 - mysql -e 'create database edc character set utf8;'
+
 script:
 - coverage run --source=survey manage.py test
+
 after_success:
 - coveralls
+
 notifications:
   slack:
-    secure: ttPSLnPGeWIA4Rwyv9Cv8W5u1+pT32f1wsAMDIGv/gWTP806IBUXZ5ta4GkK8U4BjBf9LpAAhYSx3KFc7TlBTVan8NVnTkJJbQVvkF7C3ErzIz80RITNEYAcfveHHN5pm9FpdpehN8Bu2GrGhs7txGtqp47O8Cvtnpbw8VwgnxnfGRS9Qz6tgV8o3tuDgXUYR7ZuBRQ95mcMI4/P2tVgnDcu0HfRgY4R/xm2tJ/qiem3f9ZHZZa1DMmEKxgImK7J/z4Mx2C1sBBM+IY1TRwKMM9PNQ2FRsk/esikiLETZ1IJhsV+zT4bLdnuGtUWnzhEuFMyL5FPRZUOOOYLOi+mf7Sh78UO3a7mSaEGNwOLomERTwBBM5bteEQF8N5UgABbZRPd0pEg16LEvMNi2Kj9sUyWuQVIADuLXzCaEYEr3Aef/oyNPoQH921P48r6y9tFp20xAn8b2wsinRMGS9o4aoXk1yrg1/Z+7kiQFS/WeG/MEcuh6DvbB3y4bHJCN4tZUBQIeOh8iXKVwyRfuj1VIfa2vPOa6keYLZQOVdxHLbxZ0S35LgeVgr8HlcRF7weAxFdVXZkihzjsF68iNe9U+KOMCn+VzRcGBCWiMSeoYJFg0vkGVbI/q/sna9aJ4AuKT3MIv4bNgS8vBqbj3erb9bQmfA21XmwqHAEIz+ezlH8=
+    secure: TTsJHovp0lXmrks/D8+X7LHRO8K+TOEQX6+POTsMz8F1i0fuDhY18fN2/R4bQLDigo7+blHNr7fP4t4pLj36fPqPTfv8wRktG4CCOJOucI03Q6buMmcR5/1BsRJEZFytnsyme/T+wWTowlv/r4u3XbHV9Q3JAceFNY6hJnQa9ahpkfk/Vy2PfV8XRSYybvFTZLj0D+4pBcTYaAeye6azXKKadM4m70vGDOKTlyBEGyZmeefAovnaGLcollo1N5E8vGaD3AIaXZLYmWQky2y9cBkVirqLUXE3XneWGN7yne+LtSRGMiGCKrw+thZ8NHrcMBSYNiFPmRise6nh9zprQIVjzUOoSw3w3EWPV/tKduNEvXs26tQGAw9JSkEONA6Wg36fTssCOnl6jDj911WP5nMnCwTEQjMIBvZTt7b+YKpaNqvI1oKB/OL+uSQ8m10UpdEvZRcex3PXNc21ic//KoEG0Zew29wBISaxb9cD/oCpSGL/BU4cbvWuUYPuvd5iwfUmGP2T7fGvA8mXyUMXm62Zjh2U939IbY/FHsjxpvmYbkIP184pxx7Ldem+spQomZGsQcSE6Z5ETq0Z7YCXgqp+HWkGcY4pwEGzwTZssP6ZP/JWFbaRUTGxkQFpCPjfDGZI037anA8LAMJMbG5+kIwOzA9fUhBx7zMYr3VMAkg=
