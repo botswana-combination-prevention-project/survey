@@ -5,6 +5,7 @@ from edc_base.utils import get_utcnow
 
 from ..site_surveys import site_surveys
 from ..survey_schedule import SurveySchedule
+from .surveys import load_test_surveys
 
 fake = Faker()
 
@@ -14,6 +15,9 @@ class SurveyTestHelperError(Exception):
 
 
 class SurveyTestHelper:
+
+    def load_test_surveys(self):
+        load_test_surveys()
 
     def make_survey_schedule(self, group_name=None, name=None, **options):
         return SurveySchedule(
