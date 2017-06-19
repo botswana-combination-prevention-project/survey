@@ -4,9 +4,15 @@ from django.test import TestCase, tag
 
 from ..exceptions import SurveyError
 from ..sparser import S
+from .survey_test_helper import SurveyTestHelper
 
 
 class TestSurveyParser(TestCase):
+
+    survey_helper = SurveyTestHelper()
+
+    def setUp(self):
+        self.survey_helper.load_test_surveys()
 
     def test_s_parser_raises1(self):
         s = 'ess'

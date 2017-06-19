@@ -9,9 +9,15 @@ from edc_base.utils import get_utcnow
 from ..exceptions import SurveyDateError
 from ..exceptions import SurveyScheduleError
 from ..survey_schedule import SurveySchedule
+from .survey_test_helper import SurveyTestHelper
 
 
 class TestSurvey(TestCase):
+
+    survey_helper = SurveyTestHelper()
+
+    def setUp(self):
+        self.survey_helper.load_test_surveys()
 
     def test_schedule_good_dates(self):
         try:

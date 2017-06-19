@@ -16,6 +16,9 @@ class TestSurvey(TestCase):
 
     survey_helper = SurveyTestHelper()
 
+    def setUp(self):
+        self.survey_helper.load_test_surveys()
+
     def test_create_survey(self):
         try:
             Survey(

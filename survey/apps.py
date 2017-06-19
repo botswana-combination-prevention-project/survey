@@ -24,6 +24,66 @@ class AppConfig(DjangoApponfig):
         S('test_survey.year-1.annual-1.test_community'),
         S('test_survey.year-1.annual-2.test_community')]
 
+    def ready(self):
+        sys.stdout.write(f'Loading {self.verbose_name} ...\n')
+        self.load_surveys()
+        if site_surveys.loaded:
+            try:
+                # use same format as above
+                self.current_surveys = settings.CURRENT_SURVEYS
+            except AttributeError as e:
+                if self.use_settings:
+                    raise AttributeError(
+                        f'{e} See survey.AppConfig. You are seeing this '
+                        f'exception because \'AppConfig.use_settings\'=True')
+            else:
+                if not self.use_settings:
+                    sys.stdout.write(style.ERROR(
+                        ' * overriding app_config. Using settings.'
+                        'CURRENT_SURVEYS.\n Set AppConfig.use_settings '
+                        '= True to suppress this warning\n'))
+            site_surveys.register_current(*self.current_surveys)
+            if (self.current_survey_schedule
+                    and self.current_survey_schedule
+                    not in site_surveys.get_survey_schedule_field_values()):
+                raise SurveyError(
+                    f'Invalid current survey schedule specified. See AppConfig. '
+                    f'Got \'{self.current_survey_schedule}\'. Expected one '
+                    f'of {site_surveys.get_survey_schedule_field_values()}.')
+            else:
+                current_survey_schedule = self.current_survey_schedule or '<not set>'
+                sys.stdout.write(
+                    f' * current survey schedule : {current_survey_schedule}\n')
+            sys.stdout.write(' * detected survey schedules are:\n')
+            for field_value in site_surveys.get_survey_schedule_field_values():
+                sys.stdout.write(f'   - {field_value}\n')
+            sys.stdout.write(' * current surveys are:\n')
+            for survey in site_surveys.current_surveys:
+                sys.stdout.write(f'   - {survey.field_value}\n')
+            current_map_areas = ', '.join(site_surveys.current_map_areas)
+            sys.stdout.write(
+                f' * detected map_areas: \'{current_map_areas}\'\n')
+        sys.stdout.write(f' Done loading {self.verbose_name}.\n')
+
+    def load_surveys(self):
+        """Load surveys into site_surveys.
+
+        Set to 'manual' to prevent autodetecting surveys.
+
+        Default behaviour is to autodetect.
+        """
+        try:
+            load_surveys = settings.LOAD_SURVEYS
+        except AttributeError:
+            load_surveys = 'autodetect'
+        if load_surveys == 'manual':
+            sys.stdout.write(
+                style.WARNING(f' * Test environment. You need to load surveys '
+                              f'manually using SurveyTestHelper. See '
+                              f'settings.SURVEY_TEST_ENVIRONMENT.\n'))
+        else:
+            site_surveys.autodiscover()
+
     @property
     def current_survey_schedule(self):
         try:
@@ -45,43 +105,3 @@ class AppConfig(DjangoApponfig):
                 'Unable to determine the current map area. '
                 'See setting.CURRENT_MAP_AREA')
         return f'{survey_group}.{survey_schedule}.{map_area}'
-
-    def ready(self):
-        sys.stdout.write(f'Loading {self.verbose_name} ...\n')
-        site_surveys.autodiscover()
-        if site_surveys.loaded:
-            try:
-                # use same format as above
-                self.current_surveys = settings.CURRENT_SURVEYS
-            except AttributeError as e:
-                if self.use_settings:
-                    raise AttributeError(
-                        f'{e} See survey.AppConfig. You are seeing this '
-                        f'exception because \'AppConfig.use_settings\'=True')
-            else:
-                if not self.use_settings:
-                    sys.stdout.write(style.ERROR(
-                        ' * overriding app_config. Using settings.'
-                        'CURRENT_SURVEYS.\n Set AppConfig.use_settings '
-                        '= True to suppress this warning\n'))
-            site_surveys.register_current(*self.current_surveys)
-        if (self.current_survey_schedule
-                and self.current_survey_schedule
-                not in site_surveys.get_survey_schedule_field_values()):
-            raise SurveyError(
-                f'Invalid current survey schedule specified. See AppConfig. '
-                f'Got \'{self.current_survey_schedule}\'. Expected one '
-                f'of {site_surveys.get_survey_schedule_field_values()}.')
-        else:
-            current_survey_schedule = self.current_survey_schedule or '<not set>'
-            sys.stdout.write(
-                f' * current survey schedule : {current_survey_schedule}\n')
-        sys.stdout.write(' * detected survey schedules are:\n')
-        for field_value in site_surveys.get_survey_schedule_field_values():
-            sys.stdout.write(f'   - {field_value}\n')
-        sys.stdout.write(' * current surveys are:\n')
-        for survey in site_surveys.current_surveys:
-            sys.stdout.write(f'   - {survey.field_value}\n')
-        current_map_areas = ', '.join(site_surveys.current_map_areas)
-        sys.stdout.write(f' * detected map_areas: \'{current_map_areas}\'\n')
-        sys.stdout.write(f' Done loading {self.verbose_name}.\n')

@@ -70,7 +70,7 @@ annual_2 = Survey(
 survey_one.add_survey(baseline, annual_1, annual_2)
 
 
-def load_test_surveys(current_surveys=None):
+def load_test_surveys(current_surveys=None, load_all=None):
 
     if not current_surveys:
         app_config = django_apps.get_app_config('survey')
@@ -82,6 +82,7 @@ def load_test_surveys(current_surveys=None):
     site_surveys.current_surveys = []
 
     site_surveys.register(survey_one)
+    if load_all:
+        site_surveys.register(survey_two)
+        site_surveys.register(survey_three)
     site_surveys.register_current(*current_surveys)
-    # site_surveys.register(survey_two)
-    # site_surveys.register(survey_three)

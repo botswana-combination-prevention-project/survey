@@ -138,6 +138,7 @@ SURVEY_GROUP_NAME = 'test_survey'
 SURVEY_SCHEDULE_NAME = 'year-1'
 CURRENT_MAP_AREA = 'test_community'
 
+LOAD_SURVEYS = 'manual'  # 'manual' or 'autodetect' (default)
 
 if 'test' in sys.argv:
 

@@ -14,6 +14,11 @@ from .survey_test_helper import SurveyTestHelper
 
 class TestSiteSurveys(TestCase):
 
+    survey_helper = SurveyTestHelper()
+
+    def setUp(self):
+        self.survey_helper.load_test_surveys()
+
     def test_site_survey_registry(self):
         test_site_surveys = SiteSurveys()
         self.assertRaises(
