@@ -97,7 +97,7 @@ class AppConfig(DjangoApponfig):
         except AttributeError:
             raise SurveyMapAreaError(
                 'Unable to determine the survey schedule name. '
-                'See setting.SURVEY_SCHEDULE_NAME')
+                'See setting.LOAD_SURVEYS')
         try:
             map_area = settings.CURRENT_MAP_AREA
         except AttributeError:

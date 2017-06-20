@@ -40,34 +40,38 @@ survey_three = SurveySchedule(
     start=(get_utcnow() - relativedelta(years=1)),
     end=get_utcnow())
 
-baseline = Survey(
-    name='baseline',
-    position=0,
-    map_area=current_map_area,
-    start=(get_utcnow() - relativedelta(years=3)),
-    end=(get_utcnow() - relativedelta(years=2)),
-    full_enrollment_datetime=(get_utcnow() - relativedelta(years=2))
-)
+for index, survey in [(3, survey_one), (2, survey_two), (1, survey_three)]:
+    baseline = Survey(
+        name='baseline',
+        position=0,
+        map_area=current_map_area,
+        start=(get_utcnow() - relativedelta(years=index)),
+        end=(get_utcnow() - relativedelta(years=index - 1)),
+        full_enrollment_datetime=(
+            get_utcnow() - relativedelta(years=index - 1))
+    )
 
-annual_1 = Survey(
-    name='annual-1',
-    position=1,
-    map_area=current_map_area,
-    start=(get_utcnow() - relativedelta(years=3)),
-    end=(get_utcnow() - relativedelta(years=2)),
-    full_enrollment_datetime=(get_utcnow() - relativedelta(years=2))
-)
+    annual_1 = Survey(
+        name='annual-1',
+        position=1,
+        map_area=current_map_area,
+        start=(get_utcnow() - relativedelta(years=index)),
+        end=(get_utcnow() - relativedelta(years=index - 1)),
+        full_enrollment_datetime=(
+            get_utcnow() - relativedelta(years=index - 1))
+    )
 
-annual_2 = Survey(
-    name='annual-2',
-    position=2,
-    map_area=current_map_area,
-    start=(get_utcnow() - relativedelta(years=3)),
-    end=(get_utcnow() - relativedelta(years=2)),
-    full_enrollment_datetime=(get_utcnow() - relativedelta(years=2))
-)
+    annual_2 = Survey(
+        name='annual-2',
+        position=2,
+        map_area=current_map_area,
+        start=(get_utcnow() - relativedelta(years=index)),
+        end=(get_utcnow() - relativedelta(years=index - 1)),
+        full_enrollment_datetime=(
+            get_utcnow() - relativedelta(years=index - 1))
+    )
 
-survey_one.add_survey(baseline, annual_1, annual_2)
+    survey.add_survey(baseline, annual_1, annual_2)
 
 
 def load_test_surveys(current_surveys=None, load_all=None):
