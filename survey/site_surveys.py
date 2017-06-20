@@ -117,7 +117,8 @@ class SiteSurveys:
                 f'with any surveys in surveys.py. Got: \n *{sparsers}\n Expected one '
                 f'of: \n *{self.surveys}\n See survey.apps.AppConfig and surveys.py')
         for survey in self.surveys:
-            if survey.long_name in [s.name for s in sparsers]:
+            if (survey.field_value in [s.field_value for s in sparsers]
+                    or survey.long_name in [s.name for s in sparsers]):
                 survey.current = True
                 self.current_surveys.append(survey)
         self.current_surveys = list(set(self.current_surveys))

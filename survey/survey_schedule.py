@@ -11,6 +11,7 @@ class SurveySchedule(MapAreaMixin, DateMixin):
     def __init__(self, name=None, group_name=None, start=None, end=None,
                  map_area=None, map_areas=None):
         # e.g. year-1 in bcpp-survey.year-1.test_community
+        self._iter_index = 0
         self.name = name
         super().__init__(
             map_area=map_area, map_areas=map_areas, start=start, end=end)
@@ -28,6 +29,18 @@ class SurveySchedule(MapAreaMixin, DateMixin):
             self.field_value,
             self.start.strftime('%Y-%m-%d %Z'),
             self.end.strftime('%Y-%m-%d %Z'))
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            item = self.registry[self._iter_index]
+        except IndexError:
+            self._iter_index = 0
+            raise StopIteration
+        self._iter_index += 1
+        return item
 
     @property
     def rstart(self):

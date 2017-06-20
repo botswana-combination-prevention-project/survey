@@ -21,6 +21,7 @@ class Survey(MapAreaMixin, DateMixin):
         self.name = name
         super().__init__(
             map_area=map_area, map_areas=map_areas, start=start, end=end)
+        self.survey_name = name
         self.current = None
         self.survey_schedule = None  # set when registered to a survey_schedule
         self.position = position
@@ -74,6 +75,12 @@ class Survey(MapAreaMixin, DateMixin):
     @property
     def schedule_name(self):
         return self.survey_schedule.name
+
+    @property
+    def survey_schedule_name(self):
+        """Alias for `schedule_name`.
+        """
+        return self.schedule_name
 
     @property
     def previous(self):

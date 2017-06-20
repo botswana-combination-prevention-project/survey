@@ -7,7 +7,10 @@ from .patterns import survey as survey_pattern, survey_schedule as survey_schedu
 class S:
     """A simple class to parse survey / survey schedule name.
 
-    Makes no attempt to validate the values."""
+    Makes no attempt to validate the values.
+
+    format is S('group.survey_schedule.survey.map_area', **kwargs)
+    """
 
     def __init__(self, s, survey_name=None, inactive=None, ):
         self._s = s
