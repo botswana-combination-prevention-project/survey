@@ -1,4 +1,3 @@
-from copy import copy
 from ..site_surveys import site_surveys
 from .surveys import survey_one, survey_two, survey_three
 
@@ -7,7 +6,8 @@ class LoadTestSurveysError(Exception):
     pass
 
 
-def load_test_surveys(load_count=None, load_all=None, current_survey_index=None):
+def load_test_surveys(load_count=None, load_all=None,
+                      current_survey_index=None, no_current=None):
     """Load surveys into site_surveys manually.
     """
 
@@ -24,16 +24,22 @@ def load_test_surveys(load_count=None, load_all=None, current_survey_index=None)
         raise LoadTestSurveysError(
             f'Invalid current_survey_index. Got {current_survey_index}.')
 
+    if site_surveys.loaded:
+        for survey_schedules in site_surveys.get_survey_schedules(current=True):
+            survey_schedules.group_name = 'test_survey'
+            for survey in survey_schedules.surveys:
+                survey.current = False
     site_surveys._registry = []
     site_surveys.loaded_current = False
     site_surveys.loaded = False
 
-    survey_schedules = [copy(survey_one), copy(survey_two), copy(survey_three)]
+    survey_schedules = [survey_one, survey_two, survey_three]
 
     for index, survey_schedule in enumerate(
-            [copy(survey_one), copy(survey_two), copy(survey_three)]):
+            [survey_one, survey_two, survey_three]):
         if index <= load_count - 1:
             site_surveys.register(survey_schedule)
 
-    # register the current survey schedule / surveys
-    site_surveys.register_current(survey_schedules[current_survey_index])
+    if not no_current:
+        # register the current survey schedule / surveys
+        site_surveys.register_current(survey_schedules[current_survey_index])

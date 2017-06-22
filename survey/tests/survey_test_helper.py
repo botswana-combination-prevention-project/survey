@@ -3,9 +3,8 @@ from faker import Faker
 
 from edc_base.utils import get_utcnow
 
-from ..site_surveys import site_surveys
 from ..survey_schedule import SurveySchedule
-from .load_test_surveys import load_test_surveys
+from .load_test_surveys import load_test_surveys, site_surveys
 
 fake = Faker()
 

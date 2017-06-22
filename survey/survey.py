@@ -24,7 +24,6 @@ class Survey:
     def __init__(self, name=None, start=None, end=None,
                  full_enrollment_datetime=None, position=None,
                  map_area=None, map_areas=None):
-        self._id = uuid4()
         self.name = name
         self.survey_name = name
         self.current = None
@@ -51,58 +50,43 @@ class Survey:
                 'utc').ceil('hour').datetime
         if full_enrollment_datetime:
             if not (self.start < self.full_enrollment_datetime <= self.end):
+                start = self.start.strftime('%Y-%m-%d %Z')
+                full = self.full_enrollment_datetime.strftime('%Y-%m-%d %Z')
+                end = self.end.strftime('%Y-%m-%d %Z')
                 raise SurveyError(
-                    'Invalid Survey. Full enrollment date must be within '
-                    'start and end dates. Got {} < {} <= {} for '
-                    'survey \'{}\'.'.format(
-                        self.start.strftime('%Y-%m-%d %Z'),
-                        self.full_enrollment_datetime.strftime('%Y-%m-%d %Z'),
-                        self.end.strftime('%Y-%m-%d %Z'),
-                        self.map_area))
+                    f'Invalid Survey. Full enrollment date must be within '
+                    f'start and end dates. Got {start} < {full} <= {end} for '
+                    f'survey \'{self.map_areas}\'.')
 
     def __repr__(self):
-        return '{}(\'{}\', {}, {})'.format(
-            self.__class__.__name__,
-            self.field_value,
-            self.start.strftime('%Y-%m-%d %Z'),
-            self.end.strftime('%Y-%m-%d %Z'))
+        start = self.start.strftime('%Y-%m-%d %Z')
+        end = self.end.strftime('%Y-%m-%d %Z')
+        return (f'{self.__class__.__name__}(\'{self.field_value}\', '
+                f'{start}, {end})')
 
     def __str__(self):
         return self.field_value
 
-#     def __eq__(self, other):
-#         try:
-#             return self._id == other._id
-#         except AttributeError:
-#             return NotImplemented
-#
-#     def __ne__(self, other):
-#         try:
-#             return self._id != other._id
-#         except AttributeError:
-#             return NotImplemented
-
     @property
-    def short_name(self):
-        return '{}.{}'.format(self.survey_schedule.name, self.name.upper())
-
-    @property
-    def long_name(self):
+    def field_value(self):
         """Returns the survey string stored in model instances with
         the `survey` field, e.g. household_structure.
         """
-        return '{}.{}.{}.{}'.format(
-            self.survey_schedule.group_name,
-            self.survey_schedule.name, self.name, self.map_area)
+        return (f'{self.group_name}.{self.schedule_name}.'
+                f'{self.name}.{self.map_area}')
 
     @property
-    def field_value(self):
-        """Convenience method for models.
+    def short_name(self):
+        return f'{self.schedule_name}.{self.name}'
+
+    @property
+    def long_name(self):
+        """Alias for field_value.
         """
-        return self.long_name
+        return self.field_value
 
     def to_sparser(self):
-        return S(self.long_name)
+        return S(self.field_value)
 
     @property
     def group_name(self):
@@ -119,6 +103,10 @@ class Survey:
         return self.schedule_name
 
     @property
+    def breadcrumbs(self):
+        return [self.group_name, self.schedule_name, self.name]
+
+    @property
     def previous(self):
         """Returns the previous current survey or None.
         """
@@ -131,7 +119,3 @@ class Survey:
         """
         from .site_surveys import site_surveys
         return site_surveys.next_survey(self)
-
-    @property
-    def breadcrumbs(self):
-        return [self.group_name, self.schedule_name, self.name]

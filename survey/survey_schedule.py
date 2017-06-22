@@ -12,6 +12,10 @@ class SurveyScheduleDateError(Exception):
     pass
 
 
+class AddSurveyPositionError(Exception):
+    pass
+
+
 class SurveySchedule:
 
     date_helper_cls = DateHelper
@@ -50,9 +54,6 @@ class SurveySchedule:
 
     def to_sparsers(self):
         sparsers = []
-        if not self.surveys:
-            raise SurveyScheduleError(
-                f'SurveySchedule has no surveys!. Got {repr(self)}.')
         for survey in self.surveys:
             sparsers.append(
                 S(f'{self.group_name}.{self.name}.{survey.name}.{self.map_area}'))
@@ -66,6 +67,9 @@ class SurveySchedule:
     def surveys(self):
         """Returns all surveys in the schedule.
         """
+        if not self.registry:
+            raise SurveyScheduleError(
+                f'SurveySchedule has no surveys!. Got {repr(self)}.')
         return self.registry
 
     @property
@@ -83,7 +87,7 @@ class SurveySchedule:
         """Returns the surveys in the schedule that, according to
         app_config, are current.
         """
-        surveys = [survey for survey in self.registry if survey.name == name]
+        surveys = [survey for survey in self.surveys if survey.name == name]
         try:
             return surveys[0]
         except IndexError:
@@ -91,32 +95,24 @@ class SurveySchedule:
 
     @property
     def previous(self):
-        """Returns the previous current survey or None.
+        """Returns the previous survey schedule or None.
         """
         from .site_surveys import site_surveys
         return site_surveys.previous_survey_schedule(self)
 
     @property
     def next(self):
-        """Returns the next current survey or None.
+        """Returns the next survey schedule or None.
         """
         from .site_surveys import site_surveys
         return site_surveys.next_survey_schedule(self)
 
-    @property
-    def first(self):
-        """Returns the first current survey.
-        """
-        return self.current_surveys[0]
-
-    @property
-    def last(self):
-        """Returns the last current survey.
-        """
-        return self.current_surveys[-1]
-
     def add_survey(self, *surveys):
         for survey in surveys:
+            if survey.position is None:
+                raise AddSurveyPositionError(
+                    f'Unable to add survey to schedule \'{self.name}\'. Survey position '
+                    f'is invalid. Got {survey.position}. See survey \'{survey.name}\'')
             if not (self.start <= survey.start <= self.end):
                 raise AddSurveyDateError(
                     'Unable to add survey to schedule {}. Survey {}.start '
@@ -150,7 +146,7 @@ class SurveySchedule:
             self.registry.append(survey)
 
         # keep the registry ordered
-        self.registry.sort(key=lambda x: x.start)
+        self.registry.sort(key=lambda x: x.position)
 
     def get_surveys(self, map_area=None, reference_datetime=None):
         """Returns a list of surveys that meet the criteria.

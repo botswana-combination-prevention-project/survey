@@ -1,7 +1,7 @@
 # coding=utf-8
 
-from copy import copy
 import sys
+import copy
 
 from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
@@ -11,7 +11,7 @@ from .exceptions import (
     AddSurveyMapAreaError, AddSurveyOverlapError, AddSurveyNameError)
 from .sparser import S
 from .helpers import CurrentSurveysHelper
-from pprint import pprint
+from survey.sparser import SurveyParserError
 
 
 class CurrentSurveySchedulesAlreadyLoaded(Exception):
@@ -86,9 +86,8 @@ class SiteSurveys:
             helper = self.current_surveys_helper(
                 current_survey_schedules=survey_schedules,
                 registered_survey_schedules=self.get_survey_schedules())
-            self.current_survey_schedules = copy(
-                helper.current_survey_schedules)
-            self.current_surveys = copy(helper.current_surveys)
+            self.current_survey_schedules = helper.current_survey_schedules
+            self.current_surveys = helper.current_surveys
             self.loaded_current = True
 
     def get_survey_schedule(self, value):
@@ -140,9 +139,11 @@ class SiteSurveys:
         """
         try:
             surveys = [
-                survey for survey in self.surveys if survey.field_value == field_value]
+                survey for survey in self.surveys
+                if survey.field_value == field_value]
             if current:
-                return [survey for survey in surveys if survey in self.current_surveys][0]
+                return [survey for survey in surveys
+                        if survey in self.current_surveys][0]
             else:
                 return surveys[0]
         except IndexError:
@@ -183,25 +184,31 @@ class SiteSurveys:
         return field_values
 
     def get_survey_from_field_value(self, field_value):
-        if field_value:
+        try:
             s = S(field_value)
+        except SurveyParserError:
+            found = None
+        else:
+            found = None
             survey_schedule = self.get_survey_schedule(
                 '.'.join([s.group_name, s.survey_schedule_name]))
             for survey in survey_schedule.surveys:
                 if survey.name == s.survey_name and survey.map_area == s.map_area:
-                    return survey
-            if not django_apps.get_app_config('edc_device').is_client:
-                for survey in survey_schedule.surveys:
-                    if survey.name == s.survey_name:
-                        return survey
-            else:
-                raise SiteSurveysError(
-                    'Invalid survey name for survey_schedule \'{}\'. Got \'{}\'. '
-                    'Expected one of {}'.format(
-                        survey_schedule.field_value,
-                        s.field_value,
-                        [s.field_value for s in survey_schedule.surveys]))
-        return None
+                    found = survey
+                    break
+            if not found:
+                if not django_apps.get_app_config('edc_device').is_client:
+                    for survey in survey_schedule.surveys:
+                        if survey.name == s.survey_name:
+                            found = survey
+                            break
+                else:
+                    raise SiteSurveysError(
+                        f'Invalid survey for {repr(survey_schedule)}. '
+                        f'Got survey.field_value=\'{s.field_value}\'. '
+                        f'Expected one of '
+                        f'{[s.field_value for s in survey_schedule.surveys]}')
+        return found
 
     @property
     def map_areas(self):
@@ -275,7 +282,7 @@ class SiteSurveys:
             try:
                 mod = import_module(app)
                 try:
-                    before_import_registry = copy(site_surveys._registry)
+                    before_import_registry = copy.copy(site_surveys._registry)
                     import_module('{}.{}'.format(app, module_name))
                     sys.stdout.write(
                         ' * registered surveys from application '

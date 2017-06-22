@@ -10,7 +10,6 @@ from ..site_surveys import site_surveys
 from ..survey_schedule import SurveySchedule, SurveyScheduleError
 from .survey_test_helper import SurveyTestHelper
 from .surveys import survey_one, survey_two, survey_three
-from pprint import pprint
 
 
 class TestSurveySchedule(TestCase):
@@ -26,6 +25,39 @@ class TestSurveySchedule(TestCase):
         except SurveyScheduleError as e:
             self.fail(
                 f'SurveyScheduleError unexpectedly raised. Got {e}')
+
+    def test_schedule_no_surveys(self):
+        obj = SurveySchedule(
+            name='survey-1',
+            start=(get_utcnow() - relativedelta(years=1)),
+            end=get_utcnow())
+        self.assertRaises(SurveyScheduleError, obj.get_survey, 'erik')
+
+    def test_schedule_surveys(self):
+        survey_one.get_surveys(map_area='test_community')
+        self.assertEqual(
+            survey_one.get_survey(name='baseline'), survey_one.surveys[0])
+        self.assertEqual(
+            survey_one.get_survey(name='annual-1'), survey_one.surveys[1])
+        self.assertIsNone(survey_one.get_survey(name='blah'))
+
+    def test_schedule_surveys_next(self):
+        self.survey_helper.load_test_surveys(load_all=True)
+        self.assertEqual(survey_one.next, survey_two)
+        self.assertEqual(survey_two.previous, survey_one)
+
+    def test_schedule_surveys_current(self):
+        self.survey_helper.load_test_surveys()
+        self.assertEqual(
+            survey_one.current_surveys, survey_one.surveys)
+        self.survey_helper.load_test_surveys(load_all=True)
+        self.assertEqual(
+            survey_one.current_surveys, survey_one.surveys)
+        self.survey_helper.load_test_surveys(
+            load_all=True,
+            current_survey_index=1)
+        self.assertEqual(
+            site_surveys.current_surveys, survey_two.surveys)
 
     def test_schedule_bad_dates(self):
         self.assertRaises(

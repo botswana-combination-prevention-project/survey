@@ -43,12 +43,13 @@ class CurrentSurveysHelper:
                         code='survey_name')
             registered_survey_schedule.current = True
             self.current_survey_schedules.append(registered_survey_schedule)
+        self.current_survey_schedules.sort(key=lambda x: x.start)
 
         for survey_schedule in self.current_survey_schedules:
             for survey in survey_schedule.surveys:
-                if survey.long_name in [s.name for s in current_sparsers]:
+                if survey.field_value in [s.name for s in current_sparsers]:
                     survey.current = True
                     self.current_surveys.append(survey)
 
         self.current_surveys = list(set(self.current_surveys))
-        self.current_surveys.sort(key=lambda x: x.start)
+        self.current_surveys.sort(key=lambda x: x.position or 0)

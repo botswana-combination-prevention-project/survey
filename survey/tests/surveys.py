@@ -6,7 +6,6 @@ from ..site_surveys import site_surveys
 from ..survey import Survey
 from ..survey_schedule import SurveySchedule
 
-
 site_surveys._registry = []
 site_surveys.loaded_current = False
 site_surveys.loaded = False

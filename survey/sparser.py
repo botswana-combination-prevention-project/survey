@@ -1,7 +1,10 @@
 import re
 
-from .exceptions import SurveyError
 from .patterns import survey as survey_pattern, survey_schedule as survey_schedule_pattern
+
+
+class SurveyParserError(Exception):
+    pass
 
 
 class S:
@@ -15,25 +18,18 @@ class S:
     def __init__(self, s, survey_name=None, inactive=None, ):
         self._s = s
         self.survey_name = None
-        if re.match(survey_pattern, s):
-            try:
-                (self.group_name, self.survey_schedule_name,
-                 self.survey_name, self.map_area) = s.split('.')
-            except ValueError as e:
-                raise SurveyError(f'{e} Got {repr(s)}')
-        elif re.match(survey_schedule_pattern, s):
-            try:
-                self.group_name, self.survey_schedule_name, self.map_area = s.split(
-                    '.')
-            except ValueError as e:
-                raise SurveyError(f'{e} Got {repr(s)}')
-            else:
-                self.survey_name = survey_name
+        if re.match(survey_pattern, s or ''):
+            (self.group_name, self.survey_schedule_name,
+             self.survey_name, self.map_area) = s.split('.')
+        elif re.match(survey_schedule_pattern, s or ''):
+            (self.group_name, self.survey_schedule_name,
+             self.map_area) = s.split('.')
+            self.survey_name = survey_name
             if not self.survey_name:
-                raise SurveyError(
+                raise SurveyParserError(
                     f'Missing required survey_name. Got {repr(self)}.')
         else:
-            raise SurveyError(f'Invalid format. Got {repr(self)}.')
+            raise SurveyParserError(f'Invalid format. Got {repr(self)}.')
         self.field_value = s
         self.inactive = inactive
 
@@ -50,11 +46,8 @@ class S:
 
     @property
     def survey_field_value(self):
-        if self.survey_name:
-            return (f'{self.group_name}.{self.survey_schedule_name}.'
-                    f'{self.survey_name}.{self.map_area}')
-        else:
-            return None
+        return (f'{self.group_name}.{self.survey_schedule_name}.'
+                f'{self.survey_name}.{self.map_area}')
 
     @property
     def survey_schedule_field_value(self):

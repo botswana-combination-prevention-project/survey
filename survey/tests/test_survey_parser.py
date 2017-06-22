@@ -2,8 +2,7 @@
 
 from django.test import TestCase, tag
 
-from ..exceptions import SurveyError
-from ..sparser import S
+from ..sparser import S, SurveyParserError
 from .survey_test_helper import SurveyTestHelper
 
 
@@ -16,10 +15,10 @@ class TestSurveyParser(TestCase):
 
     def test_s_parser_raises1(self):
         s = 'ess'
-        self.assertRaises(SurveyError, S, s)
+        self.assertRaises(SurveyParserError, S, s)
 
         s = 'bcpp_survey.ess'
-        self.assertRaises(SurveyError, S, s)
+        self.assertRaises(SurveyParserError, S, s)
 
     def test_s_parse_survey_schedule(self):
         s = 'bcpp_survey.year-1.test_community'
@@ -33,6 +32,10 @@ class TestSurveyParser(TestCase):
         self.assertEqual(
             s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
         self.assertEqual(s.field_value, 'bcpp_survey.year-1.test_community')
+
+    def test_s_parse_survey_schedule_without_survey_raises(self):
+        s = 'bcpp_survey.year-1.test_community'
+        self.assertRaises(SurveyParserError, S, s)
 
     def test_s_parse_survey_schedule_with_survey(self):
         s = 'bcpp_survey.year-1.test_community'
