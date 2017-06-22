@@ -30,7 +30,8 @@ def load_test_surveys(load_count=None, load_all=None, current_survey_index=None)
 
     survey_schedules = [copy(survey_one), copy(survey_two), copy(survey_three)]
 
-    for index, survey_schedule in enumerate([copy(survey_one), copy(survey_two), copy(survey_three)]):
+    for index, survey_schedule in enumerate(
+            [copy(survey_one), copy(survey_two), copy(survey_three)]):
         if index <= load_count - 1:
             site_surveys.register(survey_schedule)
 
