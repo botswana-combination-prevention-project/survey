@@ -2,14 +2,8 @@ from dateutil.relativedelta import relativedelta
 
 from edc_base.utils import get_utcnow
 
-from ..site_surveys import site_surveys
 from ..survey import Survey
 from ..survey_schedule import SurveySchedule
-
-site_surveys._registry = []
-site_surveys.loaded_current = False
-site_surveys.loaded = False
-site_surveys.current_surveys = []
 
 current_map_area = 'test_community'
 map_areas = ['test_community']

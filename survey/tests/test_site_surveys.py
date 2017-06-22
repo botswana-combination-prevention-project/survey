@@ -13,6 +13,7 @@ from ..survey_schedule import SurveySchedule
 from .survey_test_helper import SurveyTestHelper
 from .surveys import survey_one, survey_three, survey_two
 from copy import copy
+from pprint import pprint
 
 
 class DummySurveySchedule:
@@ -25,8 +26,12 @@ class DummySurveySchedule:
 
 @tag('site_surveys')
 class TestSiteSurvey(TestCase):
+
     def test_repr(self):
         self.assertTrue(repr(site_surveys))
+
+    def test_str(self):
+        self.assertTrue(str(site_surveys))
 
 
 @tag('site_surveys')
@@ -151,7 +156,7 @@ class TestSiteSurveys(TestCase):
         """Asserts cannot register a current survey if that survey
         is not in the registry.
         """
-        self.survey_helper.load_test_surveys(no_current=True)
+        self.survey_helper.load_test_surveys(register_current=False)
         survey_blah = SurveySchedule(
             name='year-1',
             group_name='blahblahblah',
@@ -293,6 +298,20 @@ class TestSiteSurveys2(TestCase):
         self.assertEqual(
             site_surveys.get_survey_schedule_field_values(),
             [survey_one.field_value, survey_two.field_value, survey_three.field_value])
+
+    def test_get_map_areas(self):
+        self.survey_helper.load_test_surveys(load_all=True)
+        self.assertEqual(site_surveys.map_areas, ['test_community'])
+
+    def test_get_current_map_areas_none(self):
+        self.survey_helper.load_test_surveys(
+            load_all=True, register_current=False)
+        self.assertEqual(site_surveys.current_map_areas, [])
+
+    def test_get_current_map_areas(self):
+        self.survey_helper.load_test_surveys(
+            load_all=True, register_current=True)
+        self.assertEqual(site_surveys.current_map_areas, ['test_community'])
 
 
 @tag('site_surveys')

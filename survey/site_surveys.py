@@ -216,8 +216,8 @@ class SiteSurveys:
         to the system.
         """
         map_areas = []
-        for s in self.surveys:
-            map_areas.append(s.map_area)
+        for survey in self.surveys:
+            map_areas.append(survey.map_area)
         return list(set(map_areas))
 
     @property
@@ -225,8 +225,8 @@ class SiteSurveys:
         """Extracts map_areas listed in current surveys.
         """
         map_areas = []
-        for s in self.current_surveys:
-            map_areas.append(s.map_area)
+        for survey in self.current_surveys:
+            map_areas.append(survey.map_area)
         return list(set(map_areas))
 
     def previous_survey_schedule(self, survey_schedule):

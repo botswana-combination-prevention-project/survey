@@ -20,9 +20,7 @@ class CurrentSurveysHelper:
             current_sparsers = []
             for survey_schedule in current_survey_schedules:
                 current_sparsers.extend(survey_schedule.to_sparsers())
-        except AttributeError as e:
-            if 'to_sparsers' not in str(e):
-                raise AttributeError(e)
+        except AttributeError:
             current_sparsers = current_survey_schedules
 
         for sparser in current_sparsers:
