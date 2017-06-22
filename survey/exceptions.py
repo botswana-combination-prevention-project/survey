@@ -1,10 +1,6 @@
 # coding=utf-8
 
 
-class SurveyScheduleError(Exception):
-    pass
-
-
 class AddSurveyDateError(Exception):
     pass
 
@@ -22,10 +18,6 @@ class AddSurveyOverlapError(Exception):
 
 
 class SurveyError(Exception):
-    pass
-
-
-class SurveyDateError(Exception):
     pass
 
 

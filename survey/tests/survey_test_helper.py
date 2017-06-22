@@ -16,8 +16,8 @@ class SurveyTestHelperError(Exception):
 
 class SurveyTestHelper:
 
-    def load_test_surveys(self, current_surveys=None, load_all=None):
-        load_test_surveys(current_surveys=current_surveys, load_all=load_all)
+    def load_test_surveys(self, **kwargs):
+        load_test_surveys(**kwargs)
 
     def make_survey_schedule(self, group_name=None, name=None, **options):
         return SurveySchedule(

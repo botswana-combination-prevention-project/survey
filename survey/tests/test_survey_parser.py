@@ -23,11 +23,13 @@ class TestSurveyParser(TestCase):
 
     def test_s_parse_survey_schedule(self):
         s = 'bcpp_survey.year-1.test_community'
-        s = S(s)
+        s = S(s, survey_name='ess')
         self.assertEqual(s.group_name, 'bcpp_survey')
         self.assertEqual(s.survey_schedule_name, 'year-1')
         self.assertEqual(s.map_area, 'test_community')
-        self.assertEqual(s.survey_field_value, None)
+        self.assertEqual(
+            s.survey_field_value,
+            'bcpp_survey.year-1.ess.test_community')
         self.assertEqual(
             s.survey_schedule_field_value, 'bcpp_survey.year-1.test_community')
         self.assertEqual(s.field_value, 'bcpp_survey.year-1.test_community')

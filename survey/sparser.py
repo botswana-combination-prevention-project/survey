@@ -14,27 +14,31 @@ class S:
 
     def __init__(self, s, survey_name=None, inactive=None, ):
         self._s = s
+        self.survey_name = None
         if re.match(survey_pattern, s):
             try:
                 (self.group_name, self.survey_schedule_name,
                  self.survey_name, self.map_area) = s.split('.')
             except ValueError as e:
-                raise SurveyError(f'{e} Got {s}')
+                raise SurveyError(f'{e} Got {repr(s)}')
         elif re.match(survey_schedule_pattern, s):
             try:
                 self.group_name, self.survey_schedule_name, self.map_area = s.split(
                     '.')
             except ValueError as e:
-                raise SurveyError('{} Got {}'.format(str(e), s))
+                raise SurveyError(f'{e} Got {repr(s)}')
             else:
                 self.survey_name = survey_name
+            if not self.survey_name:
+                raise SurveyError(
+                    f'Missing required survey_name. Got {repr(self)}.')
         else:
-            raise SurveyError(f'Invalid survey name format. Got {s}.')
+            raise SurveyError(f'Invalid format. Got {repr(self)}.')
         self.field_value = s
         self.inactive = inactive
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(\'{self._s}\')'
+        return f'{self.__class__.__name__}(\'{self._s}\', survey_name={self.survey_name})'
 
     def __str__(self):
         name = 'survey_schedule' if self.survey_schedule_field_value else 'survey'
@@ -47,9 +51,8 @@ class S:
     @property
     def survey_field_value(self):
         if self.survey_name:
-            return '{}.{}.{}.{}'.format(
-                self.group_name, self.survey_schedule_name,
-                self.survey_name, self.map_area)
+            return (f'{self.group_name}.{self.survey_schedule_name}.'
+                    f'{self.survey_name}.{self.map_area}')
         else:
             return None
 

@@ -1,9 +1,12 @@
 # coding=utf-8
 
 import arrow
+from uuid import uuid4
 
 from .exceptions import SurveyError
-from .mixins import MapAreaMixin, DateMixin
+from .helpers import DateHelper, MapAreaHelper
+from .sparser import S
+from survey.helpers.date_helper import DateError
 
 
 class DummySurvey:
@@ -13,18 +16,36 @@ class DummySurvey:
     field_value = None
 
 
-class Survey(MapAreaMixin, DateMixin):
+class Survey:
+
+    date_helper_cls = DateHelper
+    map_area_helper_cls = MapAreaHelper
 
     def __init__(self, name=None, start=None, end=None,
                  full_enrollment_datetime=None, position=None,
                  map_area=None, map_areas=None):
+        self._id = uuid4()
         self.name = name
-        super().__init__(
-            map_area=map_area, map_areas=map_areas, start=start, end=end)
         self.survey_name = name
         self.current = None
         self.survey_schedule = None  # set when registered to a survey_schedule
         self.position = position
+
+        try:
+            self.date_helper = self.date_helper_cls(start=start, end=end)
+        except DateError as e:
+            raise SurveyError(e)
+        self.start = self.date_helper.start
+        self.end = self.date_helper.end
+        self.rstart = self.date_helper.rstart
+        self.rend = self.date_helper.rend
+
+        self.map_area_helper = self.map_area_helper_cls(
+            map_area=map_area, map_areas=map_areas)
+        self.map_area = self.map_area_helper.map_area
+        self.map_areas = self.map_area_helper.map_areas
+        self.map_area_display = self.map_area_helper.map_area_display
+
         self.full_enrollment_datetime = arrow.Arrow.fromdatetime(
             full_enrollment_datetime, full_enrollment_datetime.tzinfo).to(
                 'utc').ceil('hour').datetime
@@ -49,6 +70,18 @@ class Survey(MapAreaMixin, DateMixin):
     def __str__(self):
         return self.field_value
 
+#     def __eq__(self, other):
+#         try:
+#             return self._id == other._id
+#         except AttributeError:
+#             return NotImplemented
+#
+#     def __ne__(self, other):
+#         try:
+#             return self._id != other._id
+#         except AttributeError:
+#             return NotImplemented
+
     @property
     def short_name(self):
         return '{}.{}'.format(self.survey_schedule.name, self.name.upper())
@@ -67,6 +100,9 @@ class Survey(MapAreaMixin, DateMixin):
         """Convenience method for models.
         """
         return self.long_name
+
+    def to_sparser(self):
+        return S(self.long_name)
 
     @property
     def group_name(self):

@@ -1,15 +1,118 @@
-from django.apps import apps as django_apps
 from django.test import TestCase, tag
 from dateutil.relativedelta import relativedelta
 from edc_base.utils import get_utcnow
 
+from ..helpers import CurrentSurveyError
 from ..site_surveys import SiteSurveys, SiteSurveysRegistryNotLoaded
 from ..site_surveys import SiteSurveysAlreadyRegistered
 from ..site_surveys import site_surveys, SiteSurveysError
+from ..site_surveys import CurrentSurveySchedulesAlreadyLoaded
 from ..sparser import S
 from ..survey import Survey
 from ..survey_schedule import SurveySchedule
 from .survey_test_helper import SurveyTestHelper
+from .surveys import survey_one, survey_three, survey_two
+
+
+class DummySurveySchedule:
+    def __init__(self, name=None, surveys=None, group_name=None):
+        self.surveys = surveys or [1, 2, 3]
+        self.name = name or 'erik'
+        self.group_name = group_name or 'erik'
+        self.start = get_utcnow()
+
+
+class TestSiteSurveyRegisterCurrent(TestCase):
+
+    """Assertions for registering the current survey schedules as done
+    through AppConfig using site_survey.register_current().
+
+    Flagging a survey schedule as "current" is only valid if the schedule
+    is already registered using site_survey.register().
+    """
+
+    def setUp(self):
+        site_surveys._registry = []
+        site_surveys.loaded = False
+        site_surveys.loaded_current = False
+
+    def test_site_survey_registry_register_current_ok(self):
+        site_surveys.register(survey_one)
+        sparser = S('test_survey.year-1.baseline.test_community')
+        try:
+            site_surveys.register_current(sparser)
+        except SiteSurveysRegistryNotLoaded as e:
+            self.fail(
+                f'SiteSurveysRegistryNotLoaded unexpectedly raised. Got {e}')
+
+    def test_site_survey_registry_register_current_raises(self):
+        sparser = S('test_survey.year-1.baseline.test_community')
+        self.assertRaises(
+            SiteSurveysRegistryNotLoaded,
+            site_surveys.register_current, sparser)
+
+    def test_site_survey_registry_register_current_bad_survey_schedule(self):
+        site_surveys.register(survey_one)
+        sparser = S('test_survey.year-2.baseline.test_community')
+        self.assertRaises(
+            CurrentSurveyError,
+            site_surveys.register_current, sparser)
+
+    def test_site_survey_registry_register_current_bad_survey(self):
+        site_surveys.register(survey_one)
+        sparser = S('test_survey.year-1.blahblah.test_community')
+        with self.assertRaises(CurrentSurveyError) as cm:
+            site_surveys.register_current(sparser)
+        self.assertEqual(cm.exception.code, 'survey_name')
+
+    def test_site_survey_registry_register_current_bad_group_name(self):
+        site_surveys.register(survey_one)
+        sparser = S('blah_group.year-1.baseline.test_community')
+        with self.assertRaises(CurrentSurveyError) as cm:
+            site_surveys.register_current(sparser)
+        self.assertEqual(cm.exception.code, 'not_found')
+
+
+class TestSiteSurveyRegister(TestCase):
+
+    survey_helper = SurveyTestHelper()
+
+    def setUp(self):
+        site_surveys._registry = []
+        site_surveys.loaded = False
+        site_surveys.loaded_current = False
+
+    def test_site_survey_registry_register_no_surveys_raises(self):
+        dummy = DummySurveySchedule()
+        dummy.surveys = None
+        test_site_surveys = SiteSurveys()
+        self.assertRaises(
+            SiteSurveysError,
+            test_site_surveys.register, dummy)
+
+    def test_site_survey_registry_raises_already_registered(self):
+        dummy = DummySurveySchedule()
+        site_surveys.register(dummy)
+        self.assertRaises(
+            SiteSurveysAlreadyRegistered,
+            site_surveys.register, dummy)
+
+    def test_site_survey_registry_register_current_raises_not_loaded(self):
+        self.assertRaises(
+            SiteSurveysRegistryNotLoaded,
+            site_surveys.register_current, DummySurveySchedule())
+
+    def test_site_survey_registry_raises_not_loaded(self):
+        """Asserts any access to the registry raises not loaded.
+        """
+        self.assertRaises(
+            SiteSurveysRegistryNotLoaded,
+            site_surveys.get_survey_schedules)
+
+    def test_site_survey_registry_register_current_ok(self):
+        site_surveys = SiteSurveys()
+        site_surveys.register(survey_one)
+        site_surveys.register_current(survey_one)
 
 
 class TestSiteSurveys(TestCase):
@@ -39,45 +142,32 @@ class TestSiteSurveys(TestCase):
         is not in the registry.
         """
         test_site_surveys = SiteSurveys()
-        survey_schedule_blah = SurveySchedule(
-            name='blah',
-            group_name='BLAH',
-            start=(get_utcnow() - relativedelta(years=1)),
-            end=(get_utcnow()))
-        survey_schedule_blah.registry = ['fake_survey']
-        survey_schedule = SurveySchedule(
-            name='survey',
-            group_name='ESS',
-            start=(get_utcnow() - relativedelta(years=1)),
-            end=(get_utcnow()))
-        survey_schedule.registry = ['fake_survey']
-        test_site_surveys.register(survey_schedule)
-        self.assertRaises(
-            SiteSurveysError,
-            test_site_surveys.register_current, survey_schedule_blah)
-
-    def test_site_survey_registry_current_surveys(self):
-        test_site_surveys = SiteSurveys()
-        survey_schedule = SurveySchedule(
+        test_site_surveys.register(survey_one)
+        survey_two = SurveySchedule(
             name='year-1',
-            group_name='bcpp',
-            start=(get_utcnow() - relativedelta(years=1)),
-            end=(get_utcnow()))
-        survey1 = Survey(
-            name='survey1',
+            group_name='blahblah',
             map_area='test_community',
-            start=survey_schedule.start + relativedelta(days=1),
-            end=survey_schedule.start + relativedelta(days=50),
-            full_enrollment_datetime=(survey_schedule.start
-                                      + relativedelta(days=30)))
-        survey_schedule.add_survey(survey1)
-        s1 = S('bcpp.year-1.survey1.test_community')
-        s2 = S('bcpp.year-2.survey2.test_community')
-        test_site_surveys.register(survey_schedule)
-        test_site_surveys.register_current(s1)
+            start=(get_utcnow() - relativedelta(years=3)),
+            end=(get_utcnow() - relativedelta(years=2)))
+        survey_two.add_survey(survey_one.surveys[0])
+        with self.assertRaises(CurrentSurveyError) as cm:
+            test_site_surveys.register_current(survey_two)
+        self.assertEqual(cm.exception.code, 'not_found')
+
+    def test_current_survey_schedules_already_loaded(self):
+        test_site_surveys = SiteSurveys()
+        test_site_surveys.register(survey_one)
+        test_site_surveys.register_current(survey_one)
         self.assertRaises(
-            SiteSurveysError,
-            test_site_surveys.register_current, s2)
+            CurrentSurveySchedulesAlreadyLoaded,
+            test_site_surveys.register_current, survey_two)
+
+    def test_current_survey_schedules_unregistered_schedule(self):
+        test_site_surveys = SiteSurveys()
+        test_site_surveys.register(survey_one)
+        self.assertRaises(
+            CurrentSurveyError,
+            test_site_surveys.register_current, survey_one, survey_two)
 
     def test_site_survey_already_registered_name(self):
         test_site_surveys = SiteSurveys()
@@ -128,8 +218,6 @@ class TestSiteSurveys(TestCase):
                 self.assertRaises(
                     SiteSurveysAlreadyRegistered,
                     site_surveys.register, survey_schedule)
-        for survey_schedule in survey_schedules:
-            site_surveys.unregister(survey_schedule)
 
     def test_survey_schedule_date_is_unique(self):
         survey_schedule = SurveySchedule(
@@ -140,7 +228,6 @@ class TestSiteSurveys(TestCase):
         site_surveys.register(survey_schedule)
         self.assertRaises(
             SiteSurveysAlreadyRegistered, site_surveys.register, survey_schedule)
-        site_surveys.unregister(survey_schedule)
 
     def test_get_survey_schedules_by_group_name(self):
         survey_schedules = []
@@ -157,29 +244,86 @@ class TestSiteSurveys(TestCase):
         self.assertEqual(len(survey_schedules), 3)
         self.assertEqual(
             site_surveys.get_survey_schedules('ESS'), survey_schedules)
-        for survey_schedule in survey_schedules:
-            site_surveys.unregister(survey_schedule)
 
 
 class TestSiteSurveys2(TestCase):
 
+    survey_helper = SurveyTestHelper()
+
+    def setUp(self):
+        site_surveys._registry = []
+        site_surveys.loaded = False
+        site_surveys.loaded_current = False
+        self.survey_helper.load_test_surveys()
+
     def test_get_survey_by_field_value(self):
-        app_config = django_apps.get_app_config('survey')
-        field_value = app_config.current_surveys[0].field_value
-        self.assertIsNotNone(field_value)
-        survey = site_surveys.get_survey_from_field_value(field_value)
+        survey_schedule = site_surveys.get_survey_schedule(
+            survey_one.short_name)
+        survey = survey_schedule.surveys[1]
+        self.assertIsNotNone(survey.field_value)
         self.assertEqual(
-            survey.field_value, field_value)
+            survey.field_value,
+            site_surveys.get_survey_from_field_value(survey.field_value).field_value)
 
     def test_get_survey_schedule_by_field_value(self):
-        app_config = django_apps.get_app_config('survey')
-        field_value = app_config.current_surveys[0].field_value
-        self.assertIsNotNone(field_value)
-        s = S(field_value)
+        survey_schedule = site_surveys.get_survey_schedule(
+            survey_one.short_name)
         survey_schedule = site_surveys.get_survey_schedule_from_field_value(
-            field_value)
+            survey_schedule.field_value)
         self.assertEqual(
-            survey_schedule.field_value, s.survey_schedule_field_value)
+            survey_schedule.field_value,
+            site_surveys.get_survey_schedule_from_field_value(
+                survey_schedule.field_value).field_value)
+
+    def test_get_survey_schedule_bad_field_value(self):
+        self.assertRaises(
+            SiteSurveysError,
+            site_surveys.get_survey_schedule_from_field_value,
+            'test_survey.blahblah')
+
+    def test_get_survey(self):
+        self.survey_helper.load_test_surveys(load_all=True)
+        self.assertEqual(
+            'test_survey.year-2.baseline.test_community',
+            site_surveys.get_survey(
+                'test_survey.year-2.baseline.test_community').field_value)
+
+    def test_get_survey_current(self):
+        self.survey_helper.load_test_surveys(
+            load_all=True,
+            current_survey_index=1)
+        self.assertEqual(
+            'test_survey.year-2.baseline.test_community',
+            site_surveys.get_survey(
+                'test_survey.year-2.baseline.test_community',
+                current=True).field_value)
+
+    def test_get_survey_current_none(self):
+        self.survey_helper.load_test_surveys(
+            load_all=True,
+            current_survey_index=1)
+        self.assertIsNone(
+            site_surveys.get_survey(
+                'test_survey.year-1.baseline.test_community',
+                current=True))
+
+    def test_get_survey_names(self):
+        self.survey_helper.load_test_surveys()
+        self.assertEqual(
+            site_surveys.get_survey_names(),
+            [s.field_value for s in survey_one.surveys])
+
+    def test_get_survey_names_group(self):
+        self.survey_helper.load_test_surveys()
+        self.assertEqual(
+            site_surveys.get_survey_names('test_survey'),
+            [s.field_value for s in survey_one.surveys])
+
+    def test_get_survey_schedule_field_values(self):
+        self.survey_helper.load_test_surveys(load_all=True)
+        self.assertEqual(
+            site_surveys.get_survey_schedule_field_values(),
+            [survey_one.field_value, survey_two.field_value, survey_three.field_value])
 
 
 class TestSiteSurveysSurveyOrder(TestCase):
@@ -187,7 +331,9 @@ class TestSiteSurveysSurveyOrder(TestCase):
     survey_helper = SurveyTestHelper()
 
     def setUp(self):
-        site_surveys.backup_registry(clear=True)
+        site_surveys._registry = []
+        site_surveys.loaded = False
+        site_surveys.loaded_current = False
 
         self.survey_schedule = self.survey_helper.make_survey_schedule(
             name='year-1')
@@ -212,7 +358,7 @@ class TestSiteSurveysSurveyOrder(TestCase):
             end=self.survey_schedule.start + relativedelta(days=150),
             full_enrollment_datetime=(self.survey_schedule.start
                                       + relativedelta(days=120)))
-        self.current_surveys = [
+        self.current_sparsers = [
             S('test_survey.year-1.survey1.test_community'),
             S('test_survey.year-1.survey2.test_community'),
             S('test_survey.year-1.survey3.test_community')]
@@ -229,7 +375,7 @@ class TestSiteSurveysSurveyOrder(TestCase):
         self.survey_schedule.add_survey(
             self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
-        site_surveys.register_current(*self.current_surveys)
+        site_surveys.register_current(*self.current_sparsers)
         surveys = site_surveys.surveys
         self.assertEqual(surveys[0].previous, None)
         self.assertEqual(surveys[1].previous, self.survey1)
@@ -239,7 +385,7 @@ class TestSiteSurveysSurveyOrder(TestCase):
         self.survey_schedule.add_survey(
             self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
-        site_surveys.register_current(*self.current_surveys)
+        site_surveys.register_current(*self.current_sparsers)
         surveys = site_surveys.surveys
         self.assertEqual(surveys[0].next, self.survey2)
         self.assertEqual(surveys[1].next, self.survey3)
@@ -249,7 +395,7 @@ class TestSiteSurveysSurveyOrder(TestCase):
         self.survey_schedule.add_survey(
             self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
-        site_surveys.register_current(*self.current_surveys)
+        site_surveys.register_current(*self.current_sparsers)
         self.assertEqual(len(site_surveys.current_surveys), 3)
 
     def test_current_has_flag_set(self):
@@ -258,7 +404,7 @@ class TestSiteSurveysSurveyOrder(TestCase):
         self.survey_schedule.add_survey(
             self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
-        site_surveys.register_current(*self.current_surveys)
+        site_surveys.register_current(*self.current_sparsers)
         for survey in site_surveys.current_surveys:
             self.assertTrue(survey.current)
 
@@ -268,7 +414,7 @@ class TestSiteSurveysSurveyOrder(TestCase):
         self.survey_schedule.add_survey(
             self.survey3, self.survey1, self.survey2)
         site_surveys.register(self.survey_schedule)
-        site_surveys.register_current(*self.current_surveys)
+        site_surveys.register_current(*self.current_sparsers)
         for survey in site_surveys.surveys:
             if survey.field_value in [
                     survey.field_value for survey in site_surveys.current_surveys]:

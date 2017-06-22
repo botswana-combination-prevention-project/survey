@@ -6,19 +6,21 @@ from django.test import TestCase, tag
 
 from edc_base.utils import get_utcnow
 
-from ..exceptions import AddSurveyMapAreaError, SurveyDateError
+from ..exceptions import AddSurveyMapAreaError
 from ..exceptions import SurveyError, AddSurveyDateError
 from ..survey import Survey
 from .survey_test_helper import SurveyTestHelper
 
 
+@tag('3')
 class TestSurvey(TestCase):
 
     survey_helper = SurveyTestHelper()
 
     def setUp(self):
-        self.survey_helper.load_test_surveys()
+        self.survey_helper.load_test_surveys(load_all=True)
 
+    @tag('4')
     def test_create_survey(self):
         try:
             Survey(
@@ -32,7 +34,7 @@ class TestSurvey(TestCase):
     def test_create_survey_with_end_precedes_start(self):
         """Assert start date precedes end date."""
         self.assertRaises(
-            SurveyDateError, Survey,
+            SurveyError, Survey,
             map_area='test_community',
             start=get_utcnow(),
             end=(get_utcnow() - relativedelta(years=1)),

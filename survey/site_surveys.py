@@ -1,15 +1,21 @@
 # coding=utf-8
 
-import copy
+from copy import copy
 import sys
 
 from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
 
 from .exceptions import (
-    SurveyScheduleError, AddSurveyDateError,
+    AddSurveyDateError,
     AddSurveyMapAreaError, AddSurveyOverlapError, AddSurveyNameError)
 from .sparser import S
+from .helpers import CurrentSurveysHelper
+from pprint import pprint
+
+
+class CurrentSurveySchedulesAlreadyLoaded(Exception):
+    pass
 
 
 class SiteSurveysRegistryNotLoaded(Exception):
@@ -30,13 +36,14 @@ class SiteSurveys:
     A survey_schedule contains surveys.
     """
 
+    current_surveys_helper = CurrentSurveysHelper
+
     def __init__(self):
         self._registry = []
         self.loaded = False
         self.loaded_current = False
+        self.current_survey_schedules = []
         self.current_surveys = []
-        self._backup_registry = []
-        self._backup_current_surveys = []
         self.constants = {}
 
     @property
@@ -46,29 +53,6 @@ class SiteSurveys:
                 'Registry not loaded. Is AppConfig for \'survey\' '
                 'declared in settings?.')
         return self._registry
-
-    def backup_registry(self, clear=False):
-        self._backup_current_surveys = copy.deepcopy(self.current_surveys)
-        self._backup_registry = copy.deepcopy(self._registry)
-        if clear:
-            self._registry = []
-            self.current_surveys = []
-            self.loaded = False
-            self.loaded_current = False
-
-    def restore_registry(self):
-        self._registry = copy.deepcopy(self._backup_registry)
-        self.current_surveys = copy.deepcopy(self._backup_current_surveys)
-        self._backup_registry = []
-        self._backup_current_surveys = []
-        self.loaded = True
-        self.loaded_current = True
-
-    def unregister(self, survey_schedule):
-        try:
-            self._registry.remove(survey_schedule)
-        except ValueError:
-            pass
 
     def register(self, survey_schedule):
         self.loaded = True
@@ -91,60 +75,47 @@ class SiteSurveys:
                         survey_schedule.name))
         self.registry.append(survey_schedule)
 
-    def register_current(self, *sparsers):
-        """Registers the current surveys from a list of sparser.S objects.
+    def register_current(self, *survey_schedules):
+        """Registers the current surveys from survey_schedule(s)
+        or sparser.S objects.
         """
-        if not self.loaded:
-            raise SiteSurveysRegistryNotLoaded(
-                'Registry not loaded. Register ALL surveys before '
-                'registering the current surveys.')
-        for s in sparsers:
-            if not self.get_survey_schedules(group_name=s.group_name):
-                try:
-                    survey_schedule_group_names = self.get_survey_schedule_group_names()
-                    raise SiteSurveysError(
-                        f'Invalid group name. Got \'{s.group_name}\'. '
-                        f'Expected one of {survey_schedule_group_names}. '
-                        'See survey.apps.AppConfig')
-                except AttributeError as e:
-                    raise SiteSurveysError(
-                        'Have you installed any surveys?. '
-                        'See survey.apps.AppConfig '
-                        f'and surveys.py. Got {e}')
-        if not self.get_surveys(*sparsers):
-            raise SiteSurveysError(
-                f'Current surveys listed in AppConfig do not correspond '
-                f'with any surveys in surveys.py. Got: \n *{sparsers}\n Expected one '
-                f'of: \n *{self.surveys}\n See survey.apps.AppConfig and surveys.py')
-        for survey in self.surveys:
-            if (survey.field_value in [s.field_value for s in sparsers]
-                    or survey.long_name in [s.name for s in sparsers]):
-                survey.current = True
-                self.current_surveys.append(survey)
-        self.current_surveys = list(set(self.current_surveys))
-        self.current_surveys.sort(key=lambda x: x.start)
+        if self.loaded_current:
+            raise CurrentSurveySchedulesAlreadyLoaded(
+                'Current survey schedules are already loaded.')
+        else:
+            helper = self.current_surveys_helper(
+                current_survey_schedules=survey_schedules,
+                registered_survey_schedules=self.get_survey_schedules())
+            self.current_survey_schedules = copy(
+                helper.current_survey_schedules)
+            self.current_surveys = copy(helper.current_surveys)
+            self.loaded_current = True
 
     def get_survey_schedule(self, value):
         """Returns a survey schedule object or raises and exception.
         """
-        group_name, name = value.split('.')
         try:
-            survey_schedule = [
-                s for s in self.registry
-                if s.name == name and s.group_name == group_name][0]
-        except IndexError:
-            raise SurveyScheduleError(
-                'Invalid survey schedule name. Got \'{}\'. '
-                'Possible names are [{}].'.format(
-                    name, ', '.join([s.name for s in self.registry])))
+            group_name, survey_schedule_name, _ = value.split('.')
+        except ValueError:
+            group_name, survey_schedule_name = value.split('.')
+        survey_schedule = None
+        for item in self.registry:
+            if (item.name == survey_schedule_name
+                    and item.group_name == group_name):
+                survey_schedule = item
+                break
+        if not survey_schedule:
+            raise SiteSurveysError(
+                f'Unable to find a registered survey schedule matching '
+                f'group_name={group_name} and '
+                f'survey_schedule_name={survey_schedule_name}.')
         return survey_schedule
 
     def get_survey_schedule_from_field_value(self, field_value):
-        if field_value:
-            s = S(field_value)
-            return self.get_survey_schedule('{}.{}'.format(
-                s.group_name, s.survey_schedule_name))
-        return None
+        """Returns a survey schedule or raises using the SurveySchedule
+        field_value attr.
+        """
+        return self.get_survey_schedule(field_value)
 
     def get_survey_schedules(self, group_name=None, current=None):
         """Returns a [<list of survey_schedules>].
@@ -159,7 +130,8 @@ class SiteSurveys:
         else:
             schedules = self.registry
         if current:
-            schedules = [s for s in schedules if s.current]
+            schedules = [
+                s for s in schedules if s in self.current_survey_schedules]
         schedules.sort(key=lambda o: o.start)
         return schedules
 
@@ -170,24 +142,11 @@ class SiteSurveys:
             surveys = [
                 survey for survey in self.surveys if survey.field_value == field_value]
             if current:
-                return [survey for survey in surveys if survey.current][0]
+                return [survey for survey in surveys if survey in self.current_surveys][0]
             else:
                 return surveys[0]
         except IndexError:
             return None
-
-    def get_surveys(self, *surveys, current=None):
-        selected = []
-        for item in surveys:
-            for survey_schedule in self.get_survey_schedules():
-                if survey_schedule.name == item.survey_schedule_name:
-                    for survey in survey_schedule.surveys:
-                        if (survey.name == item.survey_name and
-                                survey.map_area == item.map_area):
-                            selected.append(survey)
-        if current:
-            return [survey for survey in selected if survey.current]
-        return selected
 
     @property
     def surveys(self):
@@ -215,13 +174,6 @@ class SiteSurveys:
                 for survey in survey_schedule.surveys:
                     survey_names.append(survey.field_value)
         return survey_names
-
-    def get_survey_schedule_group_names(self):
-        group_names = []
-        survey_schedule_collection = self.get_survey_schedules()
-        for survey_schedule in survey_schedule_collection:
-            group_names.append(survey_schedule.group_name)
-        return group_names
 
     def get_survey_schedule_field_values(self):
         field_values = []
@@ -283,7 +235,9 @@ class SiteSurveys:
             return None
 
     def next_survey_schedule(self, survey_schedule):
-        """Returns the next survey schedule or None.
+        """Returns the next survey schedule in this group or None.
+
+        Ordered by start (date).
         """
         next_survey_schedules = [s for s in self.get_survey_schedules(
             group_name=survey_schedule.group_name)
@@ -321,12 +275,12 @@ class SiteSurveys:
             try:
                 mod = import_module(app)
                 try:
-                    before_import_registry = copy.copy(site_surveys._registry)
+                    before_import_registry = copy(site_surveys._registry)
                     import_module('{}.{}'.format(app, module_name))
                     sys.stdout.write(
                         ' * registered surveys from application '
                         '\'{}\'\n'.format(app))
-                except (SurveyScheduleError,
+                except (SiteSurveysError,
                         SiteSurveysAlreadyRegistered,
                         SiteSurveysError,
                         AddSurveyDateError,

@@ -1,55 +1,62 @@
 # coding=utf-8
-import arrow
-
-from .exceptions import (
-    AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError)
-from .mixins import MapAreaMixin, DateMixin
+from .exceptions import AddSurveyDateError, AddSurveyMapAreaError, AddSurveyNameError
+from .sparser import S
+from .helpers import DateHelper, MapAreaHelper, DateError
 
 
-class SurveySchedule(MapAreaMixin, DateMixin):
+class SurveyScheduleError(Exception):
+    pass
+
+
+class SurveyScheduleDateError(Exception):
+    pass
+
+
+class SurveySchedule:
+
+    date_helper_cls = DateHelper
+    map_area_helper_cls = MapAreaHelper
 
     def __init__(self, name=None, group_name=None, start=None, end=None,
                  map_area=None, map_areas=None):
-        # e.g. year-1 in bcpp-survey.year-1.test_community
-        self._iter_index = 0
         self.name = name
-        super().__init__(
-            map_area=map_area, map_areas=map_areas, start=start, end=end)
         self.registry = []
-        # e.g. bcpp-survey in bcpp-survey.year-1.test_community
         self.group_name = group_name
         self.survey_groups = []
+        self.current = False
+
+        try:
+            self.date_helper = self.date_helper_cls(start=start, end=end)
+        except DateError as e:
+            raise SurveyScheduleError(e)
+        self.start = self.date_helper.start
+        self.end = self.date_helper.end
+        self.rstart = self.date_helper.rstart
+        self.rend = self.date_helper.rend
+
+        self.map_area_helper = self.map_area_helper_cls(
+            map_area=map_area, map_areas=map_areas)
+        self.map_area = self.map_area_helper.map_area
+        self.map_areas = self.map_area_helper.map_areas
+        self.map_area_display = self.map_area_helper.map_area_display
 
     def __str__(self):
         return self.field_value
 
     def __repr__(self):
-        return '{}(\'{}\', {}, {})'.format(
-            self.__class__.__name__,
-            self.field_value,
-            self.start.strftime('%Y-%m-%d %Z'),
-            self.end.strftime('%Y-%m-%d %Z'))
+        start = self.start.strftime('%Y-%m-%d %Z')
+        end = self.end.strftime('%Y-%m-%d %Z')
+        return f'{self.__class__.__name__}(\'{self.field_value}\', {start}, {end})'
 
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        try:
-            item = self.registry[self._iter_index]
-        except IndexError:
-            self._iter_index = 0
-            raise StopIteration
-        self._iter_index += 1
-        return item
-
-    @property
-    def rstart(self):
-        return arrow.Arrow.fromdatetime(
-            self.start, self.start.tzinfo).to('utc')
-
-    @property
-    def rend(self):
-        return arrow.Arrow.fromdatetime(self.end, self.end.tzinfo).to('utc')
+    def to_sparsers(self):
+        sparsers = []
+        if not self.surveys:
+            raise SurveyScheduleError(
+                f'SurveySchedule has no surveys!. Got {repr(self)}.')
+        for survey in self.surveys:
+            sparsers.append(
+                S(f'{self.group_name}.{self.name}.{survey.name}.{self.map_area}'))
+        return sparsers
 
     @property
     def short_name(self):
@@ -81,10 +88,6 @@ class SurveySchedule(MapAreaMixin, DateMixin):
             return surveys[0]
         except IndexError:
             return None
-
-    @property
-    def current(self):
-        return self.current_surveys
 
     @property
     def previous(self):
