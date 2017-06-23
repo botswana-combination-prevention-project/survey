@@ -7,11 +7,12 @@ class SurveyScheduleModelMixin(models.Model):
 
     survey_schedule = models.CharField(
         max_length=150,
-        help_text="survey schedule name plus map_area")
+        help_text='survey_schedule.field_value')
 
     @property
     def survey_schedule_object(self):
-        return site_surveys.get_survey_schedule_from_field_value(self.survey_schedule)
+        return site_surveys.get_survey_schedule_from_field_value(
+            self.survey_schedule)
 
     class Meta:
         abstract = True
@@ -20,7 +21,8 @@ class SurveyScheduleModelMixin(models.Model):
 class SurveyModelMixin(SurveyScheduleModelMixin):
 
     survey = models.CharField(
-        max_length=150)
+        max_length=150,
+        help_text='survey.field_value')
 
     @property
     def survey_object(self):

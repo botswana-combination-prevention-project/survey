@@ -129,6 +129,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+GIT_DIR = BASE_DIR
 
 
 # Settings attributes for full "survey schedule name". Used to validate the
