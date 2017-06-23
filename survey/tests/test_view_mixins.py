@@ -1,12 +1,13 @@
 from django.apps import apps as django_apps
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.views.generic.base import ContextMixin
+
+from edc_device import CLIENT
 
 from ..view_mixins import SurveyViewMixin, SurveyQuerysetViewMixin
 from .survey_test_helper import SurveyTestHelper
 from .surveys import survey_one
-from django.test.utils import override_settings
-from edc_device.constants import CLIENT
 
 
 class TestView(SurveyViewMixin, ContextMixin):

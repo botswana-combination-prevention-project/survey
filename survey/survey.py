@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import arrow
-from uuid import uuid4
 
 from .exceptions import SurveyError
 from .helpers import DateHelper, MapAreaHelper

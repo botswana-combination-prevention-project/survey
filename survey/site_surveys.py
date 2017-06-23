@@ -6,11 +6,10 @@ import copy
 from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
 
-from .exceptions import (
-    AddSurveyDateError,
-    AddSurveyMapAreaError, AddSurveyOverlapError, AddSurveyNameError)
-from .sparser import S
+from .exceptions import AddSurveyDateError, AddSurveyMapAreaError
+from .exceptions import AddSurveyOverlapError, AddSurveyNameError
 from .helpers import CurrentSurveysHelper
+from .sparser import S
 from survey.sparser import SurveyParserError
 
 

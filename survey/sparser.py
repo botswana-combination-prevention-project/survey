@@ -1,6 +1,7 @@
 import re
 
-from .patterns import survey as survey_pattern, survey_schedule as survey_schedule_pattern
+from .patterns import survey as survey_pattern
+from .patterns import survey_schedule as survey_schedule_pattern
 
 
 class SurveyParserError(Exception):
