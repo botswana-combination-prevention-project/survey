@@ -1,4 +1,4 @@
-from django.conf import settings
+from django.apps import apps as django_apps
 from django.test import TestCase
 from django.views.generic.base import ContextMixin
 
@@ -73,14 +73,22 @@ class TestSurveyQuerysetViewMixin(TestCase):
         self.view = TestViewQs()
 
     def test_options(self):
-        with override_settings(DEVICE_ROLE=CLIENT):
+        with override_settings(DEVICE_ID='10', DEVICE_ROLE=CLIENT):
+            app_config = django_apps.get_app_config('edc_device')
+            app_config.device_id = None
+            app_config.messages_written = True
+            app_config.ready()
             self.assertEqual(self.view.device_role, CLIENT)
             self.view.kwargs = {}
             options = self.view.get_queryset_filter_options(None, )
             self.assertIn('survey_schedule', options)
 
     def test_options2(self):
-        with override_settings(DEVICE_ROLE=CLIENT):
+        with override_settings(DEVICE_ID='10', DEVICE_ROLE=CLIENT):
+            app_config = django_apps.get_app_config('edc_device')
+            app_config.device_id = None
+            app_config.messages_written = True
+            app_config.ready()
             self.assertEqual(self.view.device_role, CLIENT)
             self.view.survey_queryset_lookups = ['household']
             self.view.kwargs = {}
@@ -88,7 +96,11 @@ class TestSurveyQuerysetViewMixin(TestCase):
             self.assertIn('household__survey_schedule', options)
 
     def test_options3(self):
-        with override_settings(DEVICE_ROLE=CLIENT):
+        with override_settings(DEVICE_ID='10', DEVICE_ROLE=CLIENT):
+            app_config = django_apps.get_app_config('edc_device')
+            app_config.device_id = None
+            app_config.messages_written = True
+            app_config.ready()
             self.assertEqual(self.view.device_role, CLIENT)
             self.view.survey_queryset_lookups = ['plot', 'household']
             self.view.kwargs = {}
