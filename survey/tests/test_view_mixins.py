@@ -78,6 +78,7 @@ class TestSurveyQuerysetViewMixin(TestCase):
             app_config = django_apps.get_app_config('edc_device')
             app_config.device_id = None
             app_config.messages_written = True
+            app_config.device_role = None
             app_config.ready()
             self.assertEqual(self.view.device_role, CLIENT)
             self.view.kwargs = {}
@@ -88,6 +89,7 @@ class TestSurveyQuerysetViewMixin(TestCase):
         with override_settings(DEVICE_ID='10', DEVICE_ROLE=CLIENT):
             app_config = django_apps.get_app_config('edc_device')
             app_config.device_id = None
+            app_config.device_role = None
             app_config.messages_written = True
             app_config.ready()
             self.assertEqual(self.view.device_role, CLIENT)
@@ -100,6 +102,7 @@ class TestSurveyQuerysetViewMixin(TestCase):
         with override_settings(DEVICE_ID='10', DEVICE_ROLE=CLIENT):
             app_config = django_apps.get_app_config('edc_device')
             app_config.device_id = None
+            app_config.device_role = None
             app_config.messages_written = True
             app_config.ready()
             self.assertEqual(self.view.device_role, CLIENT)
