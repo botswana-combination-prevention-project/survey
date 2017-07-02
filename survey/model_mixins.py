@@ -4,6 +4,12 @@ from .site_surveys import site_surveys
 
 
 class SurveyScheduleModelMixin(models.Model):
+    """Access survey schedule attrs via a model.
+
+    Note: the model must set the survey_schedule field manually.
+    For example, see post_save signal in household that creates
+    HouseholdStructure instances.
+    """
 
     survey_schedule = models.CharField(
         max_length=150,
@@ -19,6 +25,11 @@ class SurveyScheduleModelMixin(models.Model):
 
 
 class SurveyModelMixin(SurveyScheduleModelMixin):
+    """Access survey attrs via a model.
+
+    Note: the model must set the survey field manually.
+    For example, see save methods on visit or CRFs.
+    """
 
     survey = models.CharField(
         max_length=150,
