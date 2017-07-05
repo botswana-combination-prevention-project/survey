@@ -66,6 +66,32 @@ class Survey:
     def __str__(self):
         return self.field_value
 
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        from .site_surveys import site_surveys
+        survey = site_surveys.next_survey(self)
+        if not survey:
+            raise StopIteration
+        return survey
+
+    @property
+    def next(self):
+        """Returns the next current survey or None.
+        """
+        try:
+            return next(self)
+        except StopIteration:
+            return None
+
+    @property
+    def previous(self):
+        """Returns the previous current survey or None.
+        """
+        from .site_surveys import site_surveys
+        return site_surveys.previous_survey(self)
+
     @property
     def field_value(self):
         """Returns the survey string stored in model instances with
@@ -104,17 +130,3 @@ class Survey:
     @property
     def breadcrumbs(self):
         return [self.group_name, self.schedule_name, self.name]
-
-    @property
-    def previous(self):
-        """Returns the previous current survey or None.
-        """
-        from .site_surveys import site_surveys
-        return site_surveys.previous_survey(self)
-
-    @property
-    def next(self):
-        """Returns the next current survey or None.
-        """
-        from .site_surveys import site_surveys
-        return site_surveys.next_survey(self)

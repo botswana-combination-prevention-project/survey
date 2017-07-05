@@ -3,6 +3,7 @@ from django.test import TestCase
 from ..site_surveys import site_surveys
 from .models import HouseholdStructure, SubjectVisit
 from .survey_test_helper import SurveyTestHelper
+from survey.tests.models import Household
 
 
 class TestModelMixin(TestCase):
@@ -12,12 +13,15 @@ class TestModelMixin(TestCase):
     def setUp(self):
         self.survey_helper.load_test_surveys()
         # Note: this code is in a post_save signal in module household
+        household = Household.objects.create()
         for survey_schedule in site_surveys.get_survey_schedules(current=True):
             try:
                 HouseholdStructure.objects.get(
+                    household=household,
                     survey_schedule=survey_schedule.field_value)
             except HouseholdStructure.DoesNotExist:
                 HouseholdStructure.objects.create(
+                    household=household,
                     survey_schedule=survey_schedule.field_value)
 
     def test_models_field(self):

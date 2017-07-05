@@ -1,6 +1,5 @@
 from ..site_surveys import site_surveys
 from .surveys import survey_one, survey_two, survey_three
-from pprint import pprint
 
 
 class LoadTestSurveysError(Exception):
