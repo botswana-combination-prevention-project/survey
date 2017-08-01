@@ -23,11 +23,7 @@ class SurveyViewMixin:
 
     @property
     def map_area(self):
-        try:
-            map_area = self.survey_schedule_object.map_area_display
-        except AttributeError:
-            map_area = None
-        return map_area
+        return self.survey_schedule_object.map_area_display
 
     @property
     def survey_object(self, **kwargs):
